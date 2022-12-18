@@ -14,7 +14,7 @@ const Home: NextPage = () => {
       </Head>
 
       <main>
-        <Heading>第1回 Web Audio API でシンセサイザーを作る会</Heading>
+        <Heading>第1回 ブラウザでシンセサイザーを作る会</Heading>
         <Synth />
       </main>
 
