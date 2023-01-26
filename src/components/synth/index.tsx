@@ -26,7 +26,6 @@ import {
 import GainSlider from './gainSlider';
 import ButtonOnce from './ButtonOnce';
 import { QuestionIcon } from '@chakra-ui/icons';
-// import Amp from './amp';
 
 
 // Amp 実装参考
@@ -57,6 +56,9 @@ const isBasicOscillatorType = (type: string): type is BasicOscillatorType => {
   )
 }
 
+const ATTACK_MIN_MS = 5;
+const ATTACK_MAX_MS = 20000;
+
 
 const Synth = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -66,11 +68,30 @@ const Synth = () => {
   const [gain, setGain] = useState<GainNode | null>(null);
   const [isStop, setIsStop] = useState<Boolean>(true);
   const [type, setType] = useState<BasicOscillatorType>("sine");
-  const [attack, setAttack] = useState(50);   // attack (ms)
+  const [attack, setAttack] = useState(100);   // attack (ms)
   const [decay, setDecay] = useState(300);     // decay (ms)
   const [sustain, setSustain] = useState(60); // sustain (%)
   const [release, setRelease] = useState(1000); // release (ms)
   const [intervalID, setIntervalID] = useState<any>(null);
+
+  const toAttackMs = (attackPercentage: number) => {
+    return (
+      attackPercentage <= 0.5 ?
+      ATTACK_MIN_MS + (1000 - ATTACK_MIN_MS) * attackPercentage * 2 :
+      (ATTACK_MAX_MS) * attackPercentage
+    )
+  }
+
+  const toAttackPercentage = (attackMs: number) => {
+    return (
+      attackMs <= 1000 ?
+      (attackMs - ATTACK_MIN_MS) / (1000 - ATTACK_MIN_MS) * 0.5 :
+      (attackMs - 1000) / (ATTACK_MAX_MS - 1000)
+    )
+  }
+
+  const updateCanvas = (canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, positions: number[]) => {
+  }
 
   // canvas
   useEffect(() => {
@@ -80,18 +101,18 @@ const Synth = () => {
       if (context) {
         const px = 10;
         const py = 12;
+        const buttonR = 7;
         const containerW = canvas.width  - px * 2;
         const containerY = canvas.height - py * 2;
-        const buttonR = 7;
 
         let mx = 0;
         let my = 0;
 
         console.log("set ADSR");
-        let a = 0.3; // 0.0 ~ 1.0
-        let d = 0.7; // 0.0 ~ 1.0
-        let s = 0.8; // 0.0 ~ 1.0
-        let r = 0.5; // 0.0 ~ 1.0
+        let a = toAttackPercentage(attack); // 0.0 ~ 1.0
+        let d = toAttackPercentage(decay); // 0.0 ~ 1.0
+        let s = sustain / 100; // 0.0 ~ 1.0
+        let r = toAttackPercentage(release); // 0.0 ~ 1.0
 
         let t0x = px;
         let t0y = py + containerY;
@@ -118,13 +139,37 @@ const Synth = () => {
         }, false);
 
         window.addEventListener('mouseup', () => {
+          if (moveFlag == "a") {
+            const _a = (t1x - px) / (containerW * 0.25);
+            setAttack(Math.floor(toAttackMs(_a)));
+          }
+          if (moveFlag == "d") {
+            const _d = (t2x - px - containerW * 0.25) / (containerW * 0.25);
+            setDecay(Math.floor(toAttackMs(_d)));
+            const _s = Math.round(100 - (t2y - py) / containerY * 100);
+            setSustain(_s);
+          }
+          if (moveFlag == "r") {
+            const _r = (t4x - px - containerW * 0.75) / (containerW * 0.25);
+            console.log(_r);
+            setRelease(Math.floor(toAttackMs(_r)));
+          }
           moveFlag = ""
         }, false);
 
-        canvas.addEventListener('mousemove', (evt) => {
+        window.addEventListener('mousemove', (evt) => {
           const rect = canvas.getBoundingClientRect();
           mx = evt.clientX - rect.left;
           my = evt.clientY - rect.top;
+
+          a = toAttackPercentage(attack);
+          d = toAttackPercentage(decay);
+          s = sustain / 100;
+          r = toAttackPercentage(release);
+          t1x = px + containerW * (a / 4.0);
+          t2x = px + containerW * (0.25 + d / 4.0);
+          t2y = py + containerY * (1 - s);
+          t4x = px + containerW * (0.75 + r / 4.0)
 
           if (moveFlag != "") {
             canvas.style.cursor = "pointer";
@@ -274,20 +319,6 @@ const Synth = () => {
     }, 0))
   }
 
-  // const formatSec = (value: number | string) => {
-  //   return (Number(value) >= 1000 ? value + "s" : value + "ms");
-  // }
-
-  // const parseSec = (value: string) => {
-  //   const m = value.match(/(\d*)(ms|s)/i);
-  //   if (m) {
-  //     const num = m[1] == "" ? 0 : Number(m[1]);
-  //     const uni = m[2] == "s" ? 1000 : 1
-  //     return num * uni;
-  //   }
-  //   return 0;
-  // }
-
   return (
     <Card backgroundColor='gray.100'>
       <CardHeader>
@@ -331,35 +362,44 @@ const Synth = () => {
             <Box backgroundColor="gray.200"  p={2} borderRadius="8px" height="100%">
               <Tabs variant='enclosed'>
                 <TabList>
-                  {
-                    ["AMP", "ENV1", "ENV2"].map(((tab, index) => {
-                      return (
-                        <Tab key={tab}>
-                          <Heading size='xs'>
-                            {tab}{" "}
-                            {
-                              index == 0 ? (
-                              <Tooltip label='アンプ：アタック・ディケイ・サスティン・リリースを設定しよう'>
-                                <QuestionIcon color="gray.600" />
-                              </Tooltip>
-                              ) : <></>
-                            }
-                          </Heading>
-                        </Tab>
-                      )
-                    }))
-                  }
+                  <Tab>
+                    <Heading size='xs'>
+                      AMP{" "}
+                      <Tooltip label='アンプ：アタック・ディケイ・サスティン・リリースを設定しよう'>
+                        <QuestionIcon color="gray.600" />
+                      </Tooltip>
+                    </Heading>
+                  </Tab>
+                  <Tab>
+                    <Heading size='xs'>
+                      ENV1
+                    </Heading>
+                  </Tab>
+                  <Tab>
+                    <Heading size='xs'>
+                      ENV2
+                    </Heading>
+                  </Tab>
+                  <Tab>
+                    <Heading size='xs'>
+                      LFO1
+                    </Heading>
+                  </Tab>
+                  <Tab>
+                    <Heading size='xs'>
+                      LFO2
+                    </Heading>
+                  </Tab>
                 </TabList>
                 <TabPanels>
                   <TabPanel>
-                    {/* Amp */}
                     <Box>
                       {/* <Box backgroundColor={"gray.300"} width="300px" height="100%">
                         TODO: 山みたいなのを表示。ここでも値の調節が可能
                       </Box> */}
                       <canvas width="340px" height="160px" ref={canvasRef} />
 
-                      <Box pt={2} className='amp-meter'>
+                      <Box pt={2} className='amp-input'>
                         <Flex>
                           <Box>
                             <VStack align="start">
@@ -370,8 +410,8 @@ const Synth = () => {
                                   borderColor="gray.300"
                                   min={5}
                                   max={20000}
-                                  defaultValue={attack}
-                                  onChange={(value) => {setAttack(Number(value))}}
+                                  value={attack}
+                                  onChange={(value) => setAttack(Number(value))}
                                 >
                                   <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
                                 </NumberInput>
@@ -389,7 +429,7 @@ const Synth = () => {
                                   borderColor="gray.300"
                                   min={5}
                                   max={20000}
-                                  defaultValue={decay}
+                                  value={decay}
                                   onChange={(value) => {setDecay(Number(value))}}
                                 >
                                   <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
@@ -408,7 +448,7 @@ const Synth = () => {
                                   borderColor="gray.300"
                                   min={0}
                                   max={100}
-                                  defaultValue={sustain}
+                                  value={sustain}
                                   onChange={(value) => {setSustain(Number(value))}}
                                 >
                                   <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
@@ -427,8 +467,6 @@ const Synth = () => {
                                   borderColor="gray.300"
                                   min={1}
                                   max={20000}
-                                  // format={formatSec}
-                                  // parse={parseSec}
                                   value={release}
                                   onChange={(value) => setRelease(Number(value))}
                                 >
@@ -457,6 +495,20 @@ const Synth = () => {
                       </Text>
                     </Box>
                   </TabPanel>
+                  <TabPanel>
+                    <Box height={32}>
+                      <Text pt='2' fontSize='sm'>
+                        LFO1：フィルターなどに使える
+                      </Text>
+                    </Box>
+                  </TabPanel>
+                  <TabPanel>
+                    <Box height={32}>
+                      <Text pt='2' fontSize='sm'>
+                        LFO2：フィルターなどに使える
+                      </Text>
+                    </Box>
+                  </TabPanel>
                 </TabPanels>
               </Tabs>
             </Box>
@@ -465,7 +517,7 @@ const Synth = () => {
 
         <Button
           colorScheme='teal'
-          size='sm'
+          size='xs'
           onMouseDown={() => {
             console.log("AMP start");
             startAmp();
@@ -474,7 +526,7 @@ const Synth = () => {
             console.log("AMP stop");
             stopAmp();
           }}
-        >test</Button>
+        >play 440Hz (test)</Button>
       </CardBody>
       : <></>}
     </Card>
