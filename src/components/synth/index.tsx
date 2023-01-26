@@ -1,72 +1,227 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Card,
   CardHeader,
   CardBody,
-  CardFooter,
   Heading,
-  StackDivider,
   Text,
   HStack,
   VStack,
-  Stack,
   Box,
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
-  SliderMark,
   Select,
   Button,
+  Tab,
+  Tabs,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tooltip,
+  NumberInput,
+  NumberInputField,
+  Flex,
+  Spacer,
+  Divider,
+  theme
 } from '@chakra-ui/react'
 import GainSlider from './gainSlider';
-import { isBasicOscillatorType, SynthProvider } from '@/providers/synth';
 import ButtonOnce from './ButtonOnce';
+import { QuestionIcon } from '@chakra-ui/icons';
+// import Amp from './amp';
 
+
+// Amp 実装参考
+// https://curtaincall.weblike.jp/portfolio-web-sounder/webaudioapi-basic/envelope-generator
 
 /*
 oscillator
 - gain
 - osc type
-- attack
-- decay
-- sustain
-- release
+- attack 0.0 ms ~ 20.0 s
+- decay 1.5 ms ~ 20.0 s
+- sustain 0.0 dB ~ -Inf dB
+- release 1.5 ms ~ 20.0 s
+- lPF
+- HPF
+- Filter freq 20 Hz ~ 20.5 kHz
 
 */
 
+type BasicOscillatorType = "sawtooth" | "sine" | "square" | "triangle";
+
+const isBasicOscillatorType = (type: string): type is BasicOscillatorType => {
+  return (
+    type === "sine" ||
+    type === "square" ||
+    type === "sawtooth" ||
+    type === "triangle"
+  )
+}
+
 
 const Synth = () => {
-  const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null)
-  const [oscillator, setOscillator] = useState<OscillatorNode | null>(null)
-  const [gain, setGain] = useState<GainNode | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
+  const [oscillator, setOscillator] = useState<OscillatorNode | null>(null);
+  const [gain, setGain] = useState<GainNode | null>(null);
+  const [isStop, setIsStop] = useState<Boolean>(true);
+  const [type, setType] = useState<BasicOscillatorType>("sine");
+  const [attack, setAttack] = useState(0.5);   // attack (sec)
+  const [decay, setDecay] = useState(0.3);     // decay (sec)
+  const [sustain, setSustain] = useState(0.5); // sustain (%)
+  const [release, setRelease] = useState(1.0); // release (sec)
+  const [intervalID, setIntervalID] = useState<any>(null);
+
+  // canvas
+  useEffect(() => {
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      if (context) {
+        const px = 10;
+        const py = 12;
+        const containerW = canvas.width  - px * 2;
+        const containerY = canvas.height - py * 2;
+        const buttonR = 7;
+
+        let mx = 0;
+        let my = 0;
+
+        console.log("set ADSR");
+        let a = 0.3; // 0.0 ~ 1.0
+        let d = 0.7; // 0.0 ~ 1.0
+        let s = 0.8; // 0.0 ~ 1.0
+        let r = 0.5; // 0.0 ~ 1.0
+
+        let t0x = px;
+        let t0y = py + containerY;
+        let t1x = px + containerW * (a / 4.0);
+        let t1y = py;
+        let t2x = px + containerW * (0.25 + d / 4.0);
+        let t2y = py + containerY * (1 - s);
+        let t3x = px + containerW * 0.75;
+        let t3y = t2y;
+        let t4x = px + containerW * (0.75 + r / 4.0);
+        let t4y = py + containerY;
+
+        let moveFlag = "";
+
+        window.addEventListener('mousedown', () => {
+          // マウスホバーしているか
+          if (Math.sqrt((t1x - mx) ** 2 + (t1y - my) ** 2) <= buttonR) {
+            moveFlag = "a";
+          } else if (Math.sqrt((t2x - mx) ** 2 + (t2y - my) ** 2) <= buttonR) {
+            moveFlag = "d";
+          } else if (Math.sqrt((t4x - mx) ** 2 + (t4y - my) ** 2) <= buttonR) {
+            moveFlag = "r";
+          }
+        }, false);
+
+        window.addEventListener('mouseup', () => {
+          moveFlag = ""
+        }, false);
+
+        canvas.addEventListener('mousemove', (evt) => {
+          const rect = canvas.getBoundingClientRect();
+          mx = evt.clientX - rect.left;
+          my = evt.clientY - rect.top;
+
+          if (moveFlag != "") {
+            canvas.style.cursor = "pointer";
+          } else {
+            // hover
+            if (Math.sqrt((t1x - mx) ** 2 + (t1y - my) ** 2) <= buttonR ||
+                Math.sqrt((t2x - mx) ** 2 + (t2y - my) ** 2) <= buttonR ||
+                Math.sqrt((t4x - mx) ** 2 + (t4y - my) ** 2) <= buttonR) {
+              canvas.style.cursor = "pointer";
+            } else {
+              canvas.style.cursor = "auto";
+            }
+          }
+
+          if (moveFlag != "") {
+            if (moveFlag == "a") {
+              t1x = Math.max(px, Math.min(mx, px + containerW * 0.25));
+            } else if (moveFlag == "d") {
+              t2x = Math.max(px + containerW * 0.25, Math.min(mx, px + containerW * 0.5));
+              t2y = Math.max(py, Math.min(my, py + containerY));
+              t3y = Math.max(py, Math.min(my, py + containerY));
+            } else if (moveFlag == "r") {
+              t4x = Math.max(px + containerW * 0.75, Math.min(mx, px + containerW));
+            }
+          }
+
+          // bg
+          context.fillStyle = theme.colors.gray[300];
+          context.fillRect(0,0, canvas.width, canvas.height);
+          [
+            theme.colors.red[200],
+            theme.colors.orange[200],
+            theme.colors.green[200],
+            theme.colors.blue[200]
+          ].map((c, i) => {
+            context.fillStyle = c;
+            context.fillRect(px + containerW * 0.25 * i, py, containerW / 4, containerY);
+          })
+
+          // line
+          context.lineWidth = 3;
+          context.strokeStyle = theme.colors.gray[100];
+
+          context.beginPath();
+          context.moveTo(t0x, t0y);
+          context.lineTo(t1x, t1y);
+          context.stroke();
+
+          context.beginPath();
+          context.moveTo(t1x, t1y);
+          context.lineTo(t2x, t2y);
+          context.stroke();
+
+          context.beginPath();
+          context.moveTo(t2x, t2y);
+          context.lineTo(t3x, t3y);
+          context.stroke();
+
+          context.beginPath();
+          context.moveTo(t3x, t3y);
+          context.lineTo(t4x, t4y);
+          context.stroke();
+
+          // button
+          // attack
+          context.beginPath();
+          context.arc(t1x, t1y, buttonR, 0, Math.PI * 2, true);
+          context.fillStyle = "white";
+          context.fill();
+
+          // decay
+          context.beginPath();
+          context.arc(t2x, t2y, buttonR, 0, Math.PI * 2, true);
+          context.fillStyle = "white";
+          context.fill();
+
+          // release
+          context.beginPath();
+          context.arc(t4x, t4y, buttonR, 0, Math.PI * 2, true);
+          context.fillStyle = "white";
+          context.fill();
+
+        }, false);
+      }
+    }
+  })
+
 
   const initAudio = () => {
     console.log("start init osc");
     const _audioCtx = new AudioContext();
     const _oscillator = new OscillatorNode(_audioCtx);
     const _gain = new GainNode(_audioCtx)
-    _gain.gain.value = 0;
-    _oscillator.connect(_gain);
-    _gain.connect(_audioCtx.destination);
-    _oscillator.start();
-
-    let bpm = 120;
-    let note_length = 60 / bpm;
-    for (let n = 0; n < 16; n++) {
-      // 音の開始・終了時間を計算する
-      let start_time = n * note_length;
-      let end_time = start_time + 0.1;
-      // gain (音量)を時間指定で設定することで鳴らしたり止めたりする
-      _gain.gain.setValueAtTime(0.4, _audioCtx.currentTime + start_time);
-      _gain.gain.setValueAtTime(0.0, _audioCtx.currentTime + end_time);
-      // 小節の最初の音だけ高くする
-      if (n % 4 == 0) {
-        _oscillator.frequency.setValueAtTime(880, _audioCtx.currentTime + start_time);
-      } else {
-        _oscillator.frequency.setValueAtTime(440, _audioCtx.currentTime + start_time);
-      }
-    }
+    // _gain.gain.value = 0;
+    // _oscillator.connect(_gain);
+    // _gain.connect(_audioCtx.destination);
+    // _oscillator.start();
 
     setAudioCtx(_audioCtx);
     setOscillator(_oscillator);
@@ -74,29 +229,53 @@ const Synth = () => {
     console.log("done init osc");
   }
 
-  const countBeat = () => {
+  const startAmp = () => {
     if (!audioCtx || !oscillator || !gain) { return }
+    if (!isStop) { oscillator.stop(0); }
 
-    let bpm = 120;
-    let note_length = 60 / bpm;
-    for (let n = 0; n < 16; n++) {
-      // 音の開始・終了時間を計算する
-      let start_time = n * note_length;
-      let end_time = start_time + 0.1;
-      // gain (音量)を時間指定で設定することで鳴らしたり止めたりする
-      gain.gain.setValueAtTime(0.4, audioCtx.currentTime + start_time);
-      gain.gain.setValueAtTime(0.0, audioCtx.currentTime + end_time);
-      // 小節の最初の音だけ高くする
-      if (n % 4 == 0) {
-        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + start_time);
-      } else {
-        oscillator.frequency.setValueAtTime(440, audioCtx.currentTime + start_time);
+    const _oscillator = new OscillatorNode(audioCtx);
+    _oscillator.type = type;
+    _oscillator.connect(gain);
+    gain.connect(audioCtx.destination);
+    let t0 = audioCtx.currentTime;
+    _oscillator.start(t0);
+    gain.gain.setValueAtTime(0, t0);
+    let t1      = t0 + attack;  // (at start) + (attack time)
+    let t2      = decay;
+    let t2Value = sustain;
+
+    gain.gain.linearRampToValueAtTime(1, t1);
+    gain.gain.setTargetAtTime(t2Value, t1, t2);
+    setIsStop(false);
+
+    _oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+    setOscillator(_oscillator);
+  }
+
+  const stopAmp = () => {
+    if (!audioCtx || !oscillator || !gain) { return }
+    if (isStop) { return; }
+
+    let t3 = audioCtx.currentTime;
+    let t4 = release;
+    gain.gain.cancelScheduledValues(t3);
+    gain.gain.setValueAtTime(gain.gain.value, t3);
+    gain.gain.setTargetAtTime(0, t3, t4);  // Release
+    setIntervalID(window.setInterval(function() {
+      let VALUE_OF_STOP = 1e-3;
+      if (gain.gain.value < VALUE_OF_STOP) {
+        oscillator.stop(0);
+        if (intervalID !== null) {
+          window.clearInterval(intervalID);
+          setIntervalID(null);
+        }
+        setIsStop(true);
       }
-    }
+    }, 0))
   }
 
   return (
-    <Card maxW='md' backgroundColor='gray.100'>
+    <Card backgroundColor='gray.100'>
       <CardHeader>
         <ButtonOnce
           flag={!(audioCtx && oscillator && gain)}
@@ -104,36 +283,27 @@ const Synth = () => {
         >
           Load Web Audio API
         </ButtonOnce>
-        <Heading size='md'>Analog Synthesizer</Heading>
+        <Heading size='md'>Web Synthesizer</Heading>
       </CardHeader>
 
       {audioCtx && oscillator && gain ?
       <CardBody>
-        <HStack spacing="24px">
+        <HStack spacing="10px" align="start" height="300px" >
           <GainSlider />
-          <Stack divider={<StackDivider />} spacing='4'>
-            <Box>
-              <Button 
-                colorScheme='teal'
-                size='sm'
-                onClick={() => {
-                  console.log("play");
-                  countBeat();
-                }}
-              >test</Button>
+            <Box backgroundColor="gray.200"  p={2} borderRadius="8px" height="100%">
               <Heading size='xs' textTransform='uppercase'>
-                Osc1
+                OSC1{" "}
+                <Tooltip label='オシレーター：波形を選ぼう'>
+                  <QuestionIcon color="gray.600" />
+                </Tooltip>
               </Heading>
-              <Text pt='2' fontSize='sm'>
-                オシレーター：波形を選ぼう
-              </Text>
               <Select
                 defaultValue='sine'
-                placeholder='Osc Type'
                 onChange={(e) => {
                   const input = e.target.value;
-                  if (isBasicOscillatorType(input)) {
+                  if (oscillator && isBasicOscillatorType(input)) {
                     oscillator.type = input;
+                    setType(input);
                   }
                 }}>
                 <option value='sine'>Sine</option>
@@ -143,24 +313,152 @@ const Synth = () => {
               </Select>
             </Box>
 
-            <Box>
-              <Heading size='xs' textTransform='uppercase'>
-                Amp
-              </Heading>
-              <Text pt='2' fontSize='sm'>
-                アンプ：アタック・ディケイ・サスティン・リリースを設定しよう
-              </Text>
+            {/* Amp, Env */}
+            <Box backgroundColor="gray.200"  p={2} borderRadius="8px" height="100%">
+              <Tabs variant='enclosed'>
+                <TabList>
+                  {
+                    ["AMP", "ENV1", "ENV2"].map(((tab, index) => {
+                      return (
+                        <Tab key={tab}>
+                          <Heading size='xs'>
+                            {tab}{" "}
+                            {
+                              index == 0 ? (
+                              <Tooltip label='アンプ：アタック・ディケイ・サスティン・リリースを設定しよう'>
+                                <QuestionIcon color="gray.600" />
+                              </Tooltip>
+                              ) : <></>
+                            }
+                          </Heading>
+                        </Tab>
+                      )
+                    }))
+                  }
+                </TabList>
+                <TabPanels>
+                  <TabPanel>
+                    {/* Amp */}
+                    <Box>
+                      {/* <Box backgroundColor={"gray.300"} width="300px" height="100%">
+                        TODO: 山みたいなのを表示。ここでも値の調節が可能
+                      </Box> */}
+                      <canvas width="340px" height="160px" ref={canvasRef} />
+
+                      <Box pt={2} className='amp-meter'>
+                        <Flex>
+                          <Box>
+                            <VStack align="start">
+                              <Text size="xs">A</Text>
+                              <HStack>
+                                <NumberInput
+                                  size="xs"
+                                  borderColor="gray.300"
+                                  min={0.0005}
+                                  max={10}
+                                  defaultValue={attack}
+                                  onChange={(value) => {setAttack(Number(value))}}
+                                >
+                                  <NumberInputField p={1} w={10} textAlign="center" _hover={{borderColor: "gray.400"}}/>
+                                </NumberInput>
+                                <Text>{' '}s</Text>
+                              </HStack>
+                            </VStack>
+                          </Box>
+                          <Spacer />
+                          <Box>
+                            <VStack align="start">
+                              <Text size="xs">D</Text>
+                              <HStack>
+                                <NumberInput
+                                  size="xs"
+                                  borderColor="gray.300"
+                                  min={0.0005}
+                                  max={10}
+                                  defaultValue={decay}
+                                  onChange={(value) => {setDecay(Number(value))}}
+                                >
+                                  <NumberInputField p={1} w={10} textAlign="center" _hover={{borderColor: "gray.400"}}/>
+                                </NumberInput>
+                                <Text>{' '}s</Text>
+                              </HStack>
+                            </VStack>
+                          </Box>
+                          <Spacer />
+                          <Box>
+                            <VStack align="start">
+                              <Text size="xs">S</Text>
+                              <HStack>
+                                <NumberInput
+                                  size="xs"
+                                  borderColor="gray.300"
+                                  min={0.0005}
+                                  max={10}
+                                  defaultValue={sustain}
+                                  onChange={(value) => {setSustain(Number(value))}}
+                                >
+                                  <NumberInputField p={1} w={10} textAlign="center" _hover={{borderColor: "gray.400"}}/>
+                                </NumberInput>
+                                <Text>{' '}dB</Text>
+                              </HStack>
+                            </VStack>
+                          </Box>
+                          <Spacer />
+                          <Box>
+                            <VStack align="start">
+                              <Text size="xs">R</Text>
+                              <HStack>
+                                <NumberInput
+                                  size="xs"
+                                  borderColor="gray.300"
+                                  min={0.0005}
+                                  max={10}
+                                  defaultValue={release}
+                                  onChange={(value) => setRelease(Number(value))}
+                                >
+                                  <NumberInputField p={1} w={10} textAlign="center" _hover={{borderColor: "gray.400"}}/>
+                                </NumberInput>
+                                <Text>{' '}s</Text>
+                              </HStack>
+                            </VStack>
+                          </Box>
+                          <Spacer />
+                        </Flex>
+                      </Box>
+                    </Box>
+                  </TabPanel>
+                  <TabPanel>
+                    <Box height={32}>
+                      <Text pt='2' fontSize='sm'>
+                        エンベロープ：フィルターなどに使える
+                      </Text>
+                    </Box>
+                  </TabPanel>
+                  <TabPanel>
+                    <Box height={32}>
+                      <Text pt='2' fontSize='sm'>
+                        エンベロープ2：フィルターなどに使える
+                      </Text>
+                    </Box>
+                  </TabPanel>
+                </TabPanels>
+              </Tabs>
             </Box>
-            <Box>
-              <Heading size='xs' textTransform='uppercase'>
-                Env1
-              </Heading>
-              <Text pt='2' fontSize='sm'>
-                エンベロープ：フィルターなどに使える
-              </Text>
-            </Box>
-          </Stack>
+          {/* </Stack> */}
         </HStack>
+
+        <Button
+          colorScheme='teal'
+          size='sm'
+          onMouseDown={() => {
+            console.log("AMP start");
+            startAmp();
+          }}
+          onMouseUp={() => {
+            console.log("AMP stop");
+            stopAmp();
+          }}
+        >test</Button>
       </CardBody>
       : <></>}
     </Card>

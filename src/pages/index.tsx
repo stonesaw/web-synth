@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { Heading } from '@chakra-ui/react'
+import { Link } from '@chakra-ui/react'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
 import Synth from '@/components/synth'
 
@@ -14,14 +14,14 @@ const Home: NextPage = () => {
       </Head>
 
       <main>
-        <Heading>第1回 ブラウザでシンセサイザーを作る会</Heading>
+        {/* <Heading>第1回 ブラウザでシンセサイザーを作る会</Heading> */}
         <Synth />
       </main>
 
       <footer>
-        <a href="https://twitter.com/m1m0zzz" target="_blank" rel="noopener noreferrer">
+        <Link href="https://twitter.com/m1m0zzz" isExternal>
           Powered by @m1m0zzz <ExternalLinkIcon mx='2px' />
-        </a>
+        </Link>
       </footer>
     </div>
   )
