@@ -57,7 +57,7 @@ const isBasicOscillatorType = (type: string): type is BasicOscillatorType => {
 }
 
 const ATTACK_MIN_MS = 5;
-const ATTACK_MAX_MS = 20000;
+const ATTACK_MAX_MS = 10000;
 
 
 const Synth = () => {
@@ -70,8 +70,8 @@ const Synth = () => {
   const [type, setType] = useState<BasicOscillatorType>("sine");
   const [attack, setAttack] = useState(100);   // attack (ms)
   const [decay, setDecay] = useState(300);     // decay (ms)
-  const [sustain, setSustain] = useState(60); // sustain (%)
-  const [release, setRelease] = useState(1000); // release (ms)
+  const [sustain, setSustain] = useState(70); // sustain (%)
+  const [release, setRelease] = useState(300); // release (ms)
   const [intervalID, setIntervalID] = useState<any>(null);
 
   const toAttackMs = (attackPercentage: number) => {
@@ -91,6 +91,7 @@ const Synth = () => {
   }
 
   const updateCanvas = (canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, positions: number[]) => {
+    // TODO: 画面更新
   }
 
   // canvas
@@ -326,7 +327,7 @@ const Synth = () => {
           flag={!(audioCtx && oscillator && gain)}
           onClick={() => initAudio()}
         >
-          Load Web Audio API
+          Load Web Audio API (Click here!)
         </ButtonOnce>
         <Heading size='md'>Web Synthesizer</Heading>
       </CardHeader>
