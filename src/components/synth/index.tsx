@@ -66,10 +66,10 @@ const Synth = () => {
   const [gain, setGain] = useState<GainNode | null>(null);
   const [isStop, setIsStop] = useState<Boolean>(true);
   const [type, setType] = useState<BasicOscillatorType>("sine");
-  const [attack, setAttack] = useState(0.5);   // attack (sec)
-  const [decay, setDecay] = useState(0.3);     // decay (sec)
-  const [sustain, setSustain] = useState(0.5); // sustain (%)
-  const [release, setRelease] = useState(1.0); // release (sec)
+  const [attack, setAttack] = useState(50);   // attack (ms)
+  const [decay, setDecay] = useState(300);     // decay (ms)
+  const [sustain, setSustain] = useState(60); // sustain (%)
+  const [release, setRelease] = useState(1000); // release (ms)
   const [intervalID, setIntervalID] = useState<any>(null);
 
   // canvas
@@ -240,9 +240,9 @@ const Synth = () => {
     let t0 = audioCtx.currentTime;
     _oscillator.start(t0);
     gain.gain.setValueAtTime(0, t0);
-    let t1      = t0 + attack;  // (at start) + (attack time)
-    let t2      = decay;
-    let t2Value = sustain;
+    let t1      = t0 + attack / 1000;  // (at start) + (attack time)
+    let t2      = decay / 1000;
+    let t2Value = sustain / 100;
 
     gain.gain.linearRampToValueAtTime(1, t1);
     gain.gain.setTargetAtTime(t2Value, t1, t2);
@@ -257,7 +257,7 @@ const Synth = () => {
     if (isStop) { return; }
 
     let t3 = audioCtx.currentTime;
-    let t4 = release;
+    let t4 = release / 1000;
     gain.gain.cancelScheduledValues(t3);
     gain.gain.setValueAtTime(gain.gain.value, t3);
     gain.gain.setTargetAtTime(0, t3, t4);  // Release
@@ -273,6 +273,20 @@ const Synth = () => {
       }
     }, 0))
   }
+
+  // const formatSec = (value: number | string) => {
+  //   return (Number(value) >= 1000 ? value + "s" : value + "ms");
+  // }
+
+  // const parseSec = (value: string) => {
+  //   const m = value.match(/(\d*)(ms|s)/i);
+  //   if (m) {
+  //     const num = m[1] == "" ? 0 : Number(m[1]);
+  //     const uni = m[2] == "s" ? 1000 : 1
+  //     return num * uni;
+  //   }
+  //   return 0;
+  // }
 
   return (
     <Card backgroundColor='gray.100'>
@@ -354,14 +368,14 @@ const Synth = () => {
                                 <NumberInput
                                   size="xs"
                                   borderColor="gray.300"
-                                  min={0.0005}
-                                  max={10}
+                                  min={5}
+                                  max={20000}
                                   defaultValue={attack}
                                   onChange={(value) => {setAttack(Number(value))}}
                                 >
-                                  <NumberInputField p={1} w={10} textAlign="center" _hover={{borderColor: "gray.400"}}/>
+                                  <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
                                 </NumberInput>
-                                <Text>{' '}s</Text>
+                                <Text>ms</Text>
                               </HStack>
                             </VStack>
                           </Box>
@@ -373,14 +387,14 @@ const Synth = () => {
                                 <NumberInput
                                   size="xs"
                                   borderColor="gray.300"
-                                  min={0.0005}
-                                  max={10}
+                                  min={5}
+                                  max={20000}
                                   defaultValue={decay}
                                   onChange={(value) => {setDecay(Number(value))}}
                                 >
-                                  <NumberInputField p={1} w={10} textAlign="center" _hover={{borderColor: "gray.400"}}/>
+                                  <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
                                 </NumberInput>
-                                <Text>{' '}s</Text>
+                                <Text>ms</Text>
                               </HStack>
                             </VStack>
                           </Box>
@@ -392,14 +406,14 @@ const Synth = () => {
                                 <NumberInput
                                   size="xs"
                                   borderColor="gray.300"
-                                  min={0.0005}
-                                  max={10}
+                                  min={0}
+                                  max={100}
                                   defaultValue={sustain}
                                   onChange={(value) => {setSustain(Number(value))}}
                                 >
-                                  <NumberInputField p={1} w={10} textAlign="center" _hover={{borderColor: "gray.400"}}/>
+                                  <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
                                 </NumberInput>
-                                <Text>{' '}dB</Text>
+                                <Text>%</Text>
                               </HStack>
                             </VStack>
                           </Box>
@@ -411,14 +425,16 @@ const Synth = () => {
                                 <NumberInput
                                   size="xs"
                                   borderColor="gray.300"
-                                  min={0.0005}
-                                  max={10}
-                                  defaultValue={release}
+                                  min={1}
+                                  max={20000}
+                                  // format={formatSec}
+                                  // parse={parseSec}
+                                  value={release}
                                   onChange={(value) => setRelease(Number(value))}
                                 >
-                                  <NumberInputField p={1} w={10} textAlign="center" _hover={{borderColor: "gray.400"}}/>
+                                  <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
                                 </NumberInput>
-                                <Text>{' '}s</Text>
+                                <Text>ms</Text>
                               </HStack>
                             </VStack>
                           </Box>
