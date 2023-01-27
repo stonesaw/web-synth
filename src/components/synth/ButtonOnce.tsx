@@ -7,12 +7,10 @@ interface Props {
   onClick: () => void;
 }
 
-const ButtonOnce = ({children, flag, onClick}: Props)  => {
+export const ButtonOnce = ({children, flag, onClick}: Props)  => {
   return (
     (
       flag ? <Button onClick={() => onClick()}>{children}</Button> : <></>
     )
   )
 }
-
-export default ButtonOnce

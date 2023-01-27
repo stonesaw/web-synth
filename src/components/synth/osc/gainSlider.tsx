@@ -1,3 +1,4 @@
+import { theme } from '@/libs/theme';
 import {
   Text,
   Box,
@@ -13,21 +14,19 @@ import { useState } from 'react';
 
 /*
 
-TODO:
-- 実際にオシレーターのGain を変更する
-- 見た目の改善 (ホバーで現在の値を表示する)
+TODO: 実際にオシレーターのGain を変更する
 */
 
-const GainSlider = () => {
+export const GainSlider = () => {
   const [gain, setGain] = useState<number>(0);
   const handleChange = (value: number) => setGain(value)
   const MAX = 6;
-  const MIN = -100;
+  const MIN = -40;
 
   return (
-    <Box backgroundColor="gray.200" textAlign="center" p={2} height="100%" borderRadius="8px">
+    <Box py={2} px={1} textAlign="center" height="100%">
       <Text w="80px" m="0">Gain</Text>
-      <Box height="80%" py={4}>
+      <Box height="70%" py={4}>
         <Slider
           aria-label='gain-slider'
           focusThumbOnChange={false}
@@ -37,8 +36,8 @@ const GainSlider = () => {
           value={gain}
           onChange={(value) => handleChange(value)}
         >
-          <SliderTrack>
-            <SliderFilledTrack />
+          <SliderTrack bg="gray.600">
+            <SliderFilledTrack bg={theme.colors.brand[400]} />
           </SliderTrack>
           <SliderThumb />
         </Slider>
@@ -48,14 +47,15 @@ const GainSlider = () => {
         <NumberInput
           size="xs"
           borderColor="gray.300"
+          variant="flushed"
           max={MAX}
           min={MIN}
           value={gain}
           onChange={(value) => handleChange(Number(value))}
         >
-          <NumberInputField p={1} w={10} textAlign="center" _hover={{borderColor: "gray.400"}}/>
+          <NumberInputField p={1} w={10} textAlign="center"/>
         </NumberInput>
-        <Text>{' '}dB</Text>
+        <Text>dB</Text>
       </HStack>
     </Box>
   )

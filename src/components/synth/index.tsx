@@ -16,16 +16,15 @@ import {
   TabPanel,
   TabPanels,
   Tooltip,
-  NumberInput,
-  NumberInputField,
-  Flex,
-  Spacer,
-  Divider,
-  theme
 } from '@chakra-ui/react'
-import GainSlider from './gainSlider';
-import ButtonOnce from './ButtonOnce';
 import { QuestionIcon } from '@chakra-ui/icons';
+
+import { theme } from '@/libs/theme'
+import { BasicOscillatorType, isBasicOscillatorType } from '@/providers/synth';
+import { ButtonOnce } from '@/components/synth/ButtonOnce';
+import { GainSlider } from '@/components/synth/osc/gainSlider';
+import { WaveShaperCanvas } from '@/components/synth/osc/waveShapeCanvas';
+import { Amp } from '@/components/synth/amp/';
 
 
 // Amp 実装参考
@@ -43,235 +42,48 @@ oscillator
 - HPF
 - Filter freq 20 Hz ~ 20.5 kHz
 
+
+TODO:
+- canvas (ADSR) の実装変更 ... eventListener を React Styleに
+- canvas (ADSR) の実装変更 ... リファクタリング
+- Filer 実装
+- Env 実装 (ADSR) をコピー
+- Sub Osc 実装
+- Osc2 実装
+
 */
-
-type BasicOscillatorType = "sawtooth" | "sine" | "square" | "triangle";
-
-const isBasicOscillatorType = (type: string): type is BasicOscillatorType => {
-  return (
-    type === "sine" ||
-    type === "square" ||
-    type === "sawtooth" ||
-    type === "triangle"
-  )
-}
-
-const ATTACK_MIN_MS = 5;
-const ATTACK_MAX_MS = 10000;
 
 
 const Synth = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
   const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
   const [oscillator, setOscillator] = useState<OscillatorNode | null>(null);
   const [gain, setGain] = useState<GainNode | null>(null);
   const [isStop, setIsStop] = useState<Boolean>(true);
   const [type, setType] = useState<BasicOscillatorType>("sine");
+  const [intervalID, setIntervalID] = useState<any>(null);
+
   const [attack, setAttack] = useState(100);   // attack (ms)
   const [decay, setDecay] = useState(300);     // decay (ms)
   const [sustain, setSustain] = useState(70); // sustain (%)
   const [release, setRelease] = useState(300); // release (ms)
-  const [intervalID, setIntervalID] = useState<any>(null);
 
-  const toAttackMs = (attackPercentage: number) => {
-    return (
-      attackPercentage <= 0.5 ?
-      ATTACK_MIN_MS + (1000 - ATTACK_MIN_MS) * attackPercentage * 2 :
-      (ATTACK_MAX_MS) * attackPercentage
-    )
-  }
+  const [env1attack, setEnv1Attack] = useState(100);   // attack (ms)
+  const [env1decay, setEnv1Decay] = useState(300);     // decay (ms)
+  const [env1sustain, setEnv1Sustain] = useState(70); // sustain (%)
+  const [env1release, setEnv1Release] = useState(300); // release (ms)
 
-  const toAttackPercentage = (attackMs: number) => {
-    return (
-      attackMs <= 1000 ?
-      (attackMs - ATTACK_MIN_MS) / (1000 - ATTACK_MIN_MS) * 0.5 :
-      (attackMs - 1000) / (ATTACK_MAX_MS - 1000)
-    )
-  }
-
-  const updateCanvas = (canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, positions: number[]) => {
-    // TODO: 画面更新
-  }
-
-  // canvas
-  useEffect(() => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      if (context) {
-        const px = 10;
-        const py = 12;
-        const buttonR = 7;
-        const containerW = canvas.width  - px * 2;
-        const containerY = canvas.height - py * 2;
-
-        let mx = 0;
-        let my = 0;
-
-        console.log("set ADSR");
-        let a = toAttackPercentage(attack); // 0.0 ~ 1.0
-        let d = toAttackPercentage(decay); // 0.0 ~ 1.0
-        let s = sustain / 100; // 0.0 ~ 1.0
-        let r = toAttackPercentage(release); // 0.0 ~ 1.0
-
-        let t0x = px;
-        let t0y = py + containerY;
-        let t1x = px + containerW * (a / 4.0);
-        let t1y = py;
-        let t2x = px + containerW * (0.25 + d / 4.0);
-        let t2y = py + containerY * (1 - s);
-        let t3x = px + containerW * 0.75;
-        let t3y = t2y;
-        let t4x = px + containerW * (0.75 + r / 4.0);
-        let t4y = py + containerY;
-
-        let moveFlag = "";
-
-        window.addEventListener('mousedown', () => {
-          // マウスホバーしているか
-          if (Math.sqrt((t1x - mx) ** 2 + (t1y - my) ** 2) <= buttonR) {
-            moveFlag = "a";
-          } else if (Math.sqrt((t2x - mx) ** 2 + (t2y - my) ** 2) <= buttonR) {
-            moveFlag = "d";
-          } else if (Math.sqrt((t4x - mx) ** 2 + (t4y - my) ** 2) <= buttonR) {
-            moveFlag = "r";
-          }
-        }, false);
-
-        window.addEventListener('mouseup', () => {
-          if (moveFlag == "a") {
-            const _a = (t1x - px) / (containerW * 0.25);
-            setAttack(Math.floor(toAttackMs(_a)));
-          }
-          if (moveFlag == "d") {
-            const _d = (t2x - px - containerW * 0.25) / (containerW * 0.25);
-            setDecay(Math.floor(toAttackMs(_d)));
-            const _s = Math.round(100 - (t2y - py) / containerY * 100);
-            setSustain(_s);
-          }
-          if (moveFlag == "r") {
-            const _r = (t4x - px - containerW * 0.75) / (containerW * 0.25);
-            console.log(_r);
-            setRelease(Math.floor(toAttackMs(_r)));
-          }
-          moveFlag = ""
-        }, false);
-
-        window.addEventListener('mousemove', (evt) => {
-          const rect = canvas.getBoundingClientRect();
-          mx = evt.clientX - rect.left;
-          my = evt.clientY - rect.top;
-
-          a = toAttackPercentage(attack);
-          d = toAttackPercentage(decay);
-          s = sustain / 100;
-          r = toAttackPercentage(release);
-          t1x = px + containerW * (a / 4.0);
-          t2x = px + containerW * (0.25 + d / 4.0);
-          t2y = py + containerY * (1 - s);
-          t4x = px + containerW * (0.75 + r / 4.0)
-
-          if (moveFlag != "") {
-            canvas.style.cursor = "pointer";
-          } else {
-            // hover
-            if (Math.sqrt((t1x - mx) ** 2 + (t1y - my) ** 2) <= buttonR ||
-                Math.sqrt((t2x - mx) ** 2 + (t2y - my) ** 2) <= buttonR ||
-                Math.sqrt((t4x - mx) ** 2 + (t4y - my) ** 2) <= buttonR) {
-              canvas.style.cursor = "pointer";
-            } else {
-              canvas.style.cursor = "auto";
-            }
-          }
-
-          if (moveFlag != "") {
-            if (moveFlag == "a") {
-              t1x = Math.max(px, Math.min(mx, px + containerW * 0.25));
-            } else if (moveFlag == "d") {
-              t2x = Math.max(px + containerW * 0.25, Math.min(mx, px + containerW * 0.5));
-              t2y = Math.max(py, Math.min(my, py + containerY));
-              t3y = Math.max(py, Math.min(my, py + containerY));
-            } else if (moveFlag == "r") {
-              t4x = Math.max(px + containerW * 0.75, Math.min(mx, px + containerW));
-            }
-          }
-
-          // bg
-          context.fillStyle = theme.colors.gray[300];
-          context.fillRect(0,0, canvas.width, canvas.height);
-          [
-            theme.colors.red[200],
-            theme.colors.orange[200],
-            theme.colors.green[200],
-            theme.colors.blue[200]
-          ].map((c, i) => {
-            context.fillStyle = c;
-            context.fillRect(px + containerW * 0.25 * i, py, containerW / 4, containerY);
-          })
-
-          // line
-          context.lineWidth = 3;
-          context.strokeStyle = theme.colors.gray[100];
-
-          context.beginPath();
-          context.moveTo(t0x, t0y);
-          context.lineTo(t1x, t1y);
-          context.stroke();
-
-          context.beginPath();
-          context.moveTo(t1x, t1y);
-          context.lineTo(t2x, t2y);
-          context.stroke();
-
-          context.beginPath();
-          context.moveTo(t2x, t2y);
-          context.lineTo(t3x, t3y);
-          context.stroke();
-
-          context.beginPath();
-          context.moveTo(t3x, t3y);
-          context.lineTo(t4x, t4y);
-          context.stroke();
-
-          // button
-          // attack
-          context.beginPath();
-          context.arc(t1x, t1y, buttonR, 0, Math.PI * 2, true);
-          context.fillStyle = "white";
-          context.fill();
-
-          // decay
-          context.beginPath();
-          context.arc(t2x, t2y, buttonR, 0, Math.PI * 2, true);
-          context.fillStyle = "white";
-          context.fill();
-
-          // release
-          context.beginPath();
-          context.arc(t4x, t4y, buttonR, 0, Math.PI * 2, true);
-          context.fillStyle = "white";
-          context.fill();
-
-        }, false);
-      }
-    }
-  })
-
+  const [env2attack, setEnv2Attack] = useState(100);   // attack (ms)
+  const [env2decay, setEnv2Decay] = useState(300);     // decay (ms)
+  const [env2sustain, setEnv2Sustain] = useState(70); // sustain (%)
+  const [env2release, setEnv2Release] = useState(300); // release (ms)
 
   const initAudio = () => {
     console.log("start init osc");
     const _audioCtx = new AudioContext();
-    const _oscillator = new OscillatorNode(_audioCtx);
-    const _gain = new GainNode(_audioCtx)
-    // _gain.gain.value = 0;
-    // _oscillator.connect(_gain);
-    // _gain.connect(_audioCtx.destination);
-    // _oscillator.start();
 
     setAudioCtx(_audioCtx);
-    setOscillator(_oscillator);
-    setGain(_gain);
+    setOscillator(new OscillatorNode(_audioCtx));
+    setGain(new GainNode(_audioCtx));
     console.log("done init osc");
   }
 
@@ -321,7 +133,7 @@ const Synth = () => {
   }
 
   return (
-    <Card backgroundColor='gray.100'>
+    <Card bg={theme.colors.brand[600]} color="white">
       <CardHeader>
         <ButtonOnce
           flag={!(audioCtx && oscillator && gain)}
@@ -329,191 +141,151 @@ const Synth = () => {
         >
           Load Web Audio API (Click here!)
         </ButtonOnce>
-        <Heading size='md'>Web Synthesizer</Heading>
+        <Heading size='md'>Web Synthesizer (Beta)</Heading>
       </CardHeader>
 
       {audioCtx && oscillator && gain ?
-      <CardBody>
-        <HStack spacing="10px" align="start" height="300px" >
-          <GainSlider />
-            <Box backgroundColor="gray.200"  p={2} borderRadius="8px" height="100%">
-              <Heading size='xs' textTransform='uppercase'>
-                OSC1{" "}
-                <Tooltip label='オシレーター：波形を選ぼう'>
-                  <QuestionIcon color="gray.600" />
+      <CardBody pt={0}>
+        {/* overflowX="scroll" overflowY="hidden" */}
+        <HStack spacing="10px" align="start" height="300px">
+          {/* Sub */}
+          <Box bg={theme.colors.brand[700]} color="white" p={2} borderRadius="8px" minWidth="100px" height="100%">
+            <Heading size='xs'>
+                Sub{" "}
+                <Tooltip label='フィルター：ローカット・ハイカットができる'>
+                  <QuestionIcon color={theme.colors.gray[300]} />
                 </Tooltip>
               </Heading>
-              <Select
-                defaultValue='sine'
-                onChange={(e) => {
-                  const input = e.target.value;
-                  if (oscillator && isBasicOscillatorType(input)) {
-                    oscillator.type = input;
-                    setType(input);
-                  }
-                }}>
-                <option value='sine'>Sine</option>
-                <option value='square'>Square</option>
-                <option value='sawtooth'>Sawtooth</option>
-                <option value='triangle'>Triangle</option>
-              </Select>
-            </Box>
+          </Box>
 
-            {/* Amp, Env */}
-            <Box backgroundColor="gray.200"  p={2} borderRadius="8px" height="100%">
-              <Tabs variant='enclosed'>
-                <TabList>
-                  <Tab>
-                    <Heading size='xs'>
-                      AMP{" "}
-                      <Tooltip label='アンプ：アタック・ディケイ・サスティン・リリースを設定しよう'>
-                        <QuestionIcon color="gray.600" />
-                      </Tooltip>
-                    </Heading>
-                  </Tab>
-                  <Tab>
-                    <Heading size='xs'>
-                      ENV1
-                    </Heading>
-                  </Tab>
-                  <Tab>
-                    <Heading size='xs'>
-                      ENV2
-                    </Heading>
-                  </Tab>
-                  <Tab>
-                    <Heading size='xs'>
-                      LFO1
-                    </Heading>
-                  </Tab>
-                  <Tab>
-                    <Heading size='xs'>
-                      LFO2
-                    </Heading>
-                  </Tab>
-                </TabList>
-                <TabPanels>
-                  <TabPanel>
-                    <Box>
-                      {/* <Box backgroundColor={"gray.300"} width="300px" height="100%">
-                        TODO: 山みたいなのを表示。ここでも値の調節が可能
-                      </Box> */}
-                      <canvas width="340px" height="160px" ref={canvasRef} />
+          {/* OSC */}
+          <Box bg={theme.colors.brand[900]} color={theme.colors.brand[400]} borderRadius="8px" p={2} height="100%">
+            <Heading size='xs'>
+              OSC1{" "}
+              <Tooltip label='オシレーター：波形を選ぼう'>
+                <QuestionIcon color={theme.colors.brand[700]} />
+              </Tooltip>
+            </Heading>
+            <HStack height="100%" align="start">
+              <GainSlider />
+              <Box p={2}>
+                <Select
+                  defaultValue='sine'
+                  variant="flushed"
+                  onChange={(e) => {
+                    const input = e.target.value;
+                    if (isBasicOscillatorType(input)) { setType(input); }
+                  }}>
+                  <option style={{"background": theme.colors.brand[900]}} value='sine'>Sine</option>
+                  <option style={{"background": theme.colors.brand[900]}} value='square'>Square</option>
+                  <option style={{"background": theme.colors.brand[900]}} value='sawtooth'>Sawtooth</option>
+                  <option style={{"background": theme.colors.brand[900]}} value='triangle'>Triangle</option>
+                </Select>
+                <WaveShaperCanvas type={type} />
+              </Box>
+            </HStack>
+          </Box>
 
-                      <Box pt={2} className='amp-input'>
-                        <Flex>
-                          <Box>
-                            <VStack align="start">
-                              <Text size="xs">A</Text>
-                              <HStack>
-                                <NumberInput
-                                  size="xs"
-                                  borderColor="gray.300"
-                                  min={5}
-                                  max={20000}
-                                  value={attack}
-                                  onChange={(value) => setAttack(Number(value))}
-                                >
-                                  <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
-                                </NumberInput>
-                                <Text>ms</Text>
-                              </HStack>
-                            </VStack>
-                          </Box>
-                          <Spacer />
-                          <Box>
-                            <VStack align="start">
-                              <Text size="xs">D</Text>
-                              <HStack>
-                                <NumberInput
-                                  size="xs"
-                                  borderColor="gray.300"
-                                  min={5}
-                                  max={20000}
-                                  value={decay}
-                                  onChange={(value) => {setDecay(Number(value))}}
-                                >
-                                  <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
-                                </NumberInput>
-                                <Text>ms</Text>
-                              </HStack>
-                            </VStack>
-                          </Box>
-                          <Spacer />
-                          <Box>
-                            <VStack align="start">
-                              <Text size="xs">S</Text>
-                              <HStack>
-                                <NumberInput
-                                  size="xs"
-                                  borderColor="gray.300"
-                                  min={0}
-                                  max={100}
-                                  value={sustain}
-                                  onChange={(value) => {setSustain(Number(value))}}
-                                >
-                                  <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
-                                </NumberInput>
-                                <Text>%</Text>
-                              </HStack>
-                            </VStack>
-                          </Box>
-                          <Spacer />
-                          <Box>
-                            <VStack align="start">
-                              <Text size="xs">R</Text>
-                              <HStack>
-                                <NumberInput
-                                  size="xs"
-                                  borderColor="gray.300"
-                                  min={1}
-                                  max={20000}
-                                  value={release}
-                                  onChange={(value) => setRelease(Number(value))}
-                                >
-                                  <NumberInputField p={1} w={12} textAlign="center" _hover={{borderColor: "gray.400"}}/>
-                                </NumberInput>
-                                <Text>ms</Text>
-                              </HStack>
-                            </VStack>
-                          </Box>
-                          <Spacer />
-                        </Flex>
-                      </Box>
-                    </Box>
-                  </TabPanel>
-                  <TabPanel>
-                    <Box height={32}>
-                      <Text pt='2' fontSize='sm'>
-                        エンベロープ：フィルターなどに使える
-                      </Text>
-                    </Box>
-                  </TabPanel>
-                  <TabPanel>
-                    <Box height={32}>
-                      <Text pt='2' fontSize='sm'>
-                        エンベロープ2：フィルターなどに使える
-                      </Text>
-                    </Box>
-                  </TabPanel>
-                  <TabPanel>
-                    <Box height={32}>
-                      <Text pt='2' fontSize='sm'>
-                        LFO1：フィルターなどに使える
-                      </Text>
-                    </Box>
-                  </TabPanel>
-                  <TabPanel>
-                    <Box height={32}>
-                      <Text pt='2' fontSize='sm'>
-                        LFO2：フィルターなどに使える
-                      </Text>
-                    </Box>
-                  </TabPanel>
-                </TabPanels>
-              </Tabs>
-            </Box>
-          {/* </Stack> */}
+          {/* Filter */}
+          <Box bg={theme.colors.brand[900]} color="white" p={2} borderRadius="8px" minWidth="200px" height="100%" >
+            <Heading size='xs'>
+                Filter{" "}
+                <Tooltip label='フィルター：ローカット・ハイカットができる'>
+                  <QuestionIcon color={theme.colors.brand[700]} />
+                </Tooltip>
+              </Heading>
+          </Box>
+
+          {/* Amp, Env */}
+          <Box bg={theme.colors.brand[900]} color="white" p={2} borderRadius="8px" height="100%">
+            <Tabs colorScheme="cyan" color={theme.colors.brand[700]} borderBottomColor={theme.colors.brand[700]}>
+              <TabList>
+                <Tab _active={{background: "#0000"}}>
+                  <Heading size='xs'>
+                    AMP{" "}
+                    <Tooltip label='アンプ：音の時間的な変化を設定できる'>
+                      <QuestionIcon color={theme.colors.brand[700]} />
+                    </Tooltip>
+                  </Heading>
+                </Tab>
+                <Tab _active={{background: "#0000"}}>
+                  <Heading size='xs'>
+                    ENV1{" "}
+                    <Tooltip label='エンベロープ：フィルターなどに使える'>
+                      <QuestionIcon color={theme.colors.brand[700]} />
+                    </Tooltip>
+                  </Heading>
+                </Tab>
+                <Tab _active={{background: "#0000"}}>
+                  <Heading size='xs'>
+                    ENV2
+                  </Heading>
+                </Tab>
+                <Tab _active={{background: "#0000"}}>
+                  <Heading size='xs'>
+                    LFO1
+                  </Heading>
+                </Tab>
+                <Tab _active={{background: "#0000"}}>
+                  <Heading size='xs'>
+                    LFO2
+                  </Heading>
+                </Tab>
+              </TabList>
+              <TabPanels color="white">
+                <TabPanel>
+                  <Amp
+                    attack={attack}
+                    setAttack={setAttack}
+                    decay={decay}
+                    setDecay={setDecay}
+                    sustain={sustain}
+                    setSustain={setSustain}
+                    release={release}
+                    setRelease={setRelease}
+                  />
+                </TabPanel>
+                <TabPanel>
+                  <Amp
+                    attack={env1attack}
+                    setAttack={setEnv1Attack}
+                    decay={env1decay}
+                    setDecay={setEnv1Decay}
+                    sustain={env1sustain}
+                    setSustain={setEnv1Sustain}
+                    release={env1release}
+                    setRelease={setEnv1Release}
+                  />
+                </TabPanel>
+                <TabPanel>
+                  <Amp
+                    attack={env2attack}
+                    setAttack={setEnv2Attack}
+                    decay={env2decay}
+                    setDecay={setEnv2Decay}
+                    sustain={env2sustain}
+                    setSustain={setEnv2Sustain}
+                    release={env2release}
+                    setRelease={setEnv2Release}
+                  />
+                </TabPanel>
+                <TabPanel>
+                  <Box minWidth="340px">
+                    <Text pt='2' fontSize='sm'>
+                      LFO1：フィルターなどに使える
+                    </Text>
+                  </Box>
+                </TabPanel>
+                <TabPanel>
+                  <Box minWidth="340px">
+                    <Text pt='2' fontSize='sm'>
+                      LFO2：フィルターなどに使える
+                    </Text>
+                  </Box>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          </Box>
         </HStack>
 
         <Button
