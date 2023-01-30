@@ -25,6 +25,8 @@ import { ButtonOnce } from '@/components/synth/ButtonOnce';
 import { GainSlider } from '@/components/synth/osc/gainSlider';
 import { WaveShaperCanvas } from '@/components/synth/osc/waveShapeCanvas';
 import { Amp } from '@/components/synth/amp/';
+import { FilterCanvas } from '@/components/synth/filter/filterCanvas';
+import { FrequencySlider } from '@/components/synth/filter/frequencySlider';
 
 
 // Amp 実装参考
@@ -58,9 +60,13 @@ const Synth = () => {
   const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
   const [oscillator, setOscillator] = useState<OscillatorNode | null>(null);
   const [gain, setGain] = useState<GainNode | null>(null);
+  const [filter, setFilter] = useState<BiquadFilterNode | null>(null);
+  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [isStop, setIsStop] = useState<Boolean>(true);
   const [type, setType] = useState<BasicOscillatorType>("sine");
   const [intervalID, setIntervalID] = useState<any>(null);
+  const [filterFreq, setFilterFreq] = useState<number>(20000); // 0 ~ 20k
+  const [filterQ, setFilterQ] = useState<number>(25); // 0 ~ 50
 
   const [attack, setAttack] = useState(100);   // attack (ms)
   const [decay, setDecay] = useState(300);     // decay (ms)
@@ -84,17 +90,29 @@ const Synth = () => {
     setAudioCtx(_audioCtx);
     setOscillator(new OscillatorNode(_audioCtx));
     setGain(new GainNode(_audioCtx));
+    setFilter(new BiquadFilterNode(_audioCtx));
+    setAnalyser(new AnalyserNode(_audioCtx, {smoothingTimeConstant: 0.7, fftSize: 1024}));
+
     console.log("done init osc");
   }
 
   const startAmp = () => {
-    if (!audioCtx || !oscillator || !gain) { return }
+    if (!audioCtx) { initAudio(); }
+    if (!audioCtx || !oscillator || !gain || !filter || !analyser) {
+      console.log("error: Can't use Audio Context!")
+      return;
+    }
     if (!isStop) { oscillator.stop(0); }
 
     const _oscillator = new OscillatorNode(audioCtx);
+
+    filter.type = "lowpass";
+    filter.frequency.value = 1000;
+    filter.Q.value = 0;
+
     _oscillator.type = type;
     _oscillator.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(filter).connect(analyser).connect(audioCtx.destination);
     let t0 = audioCtx.currentTime;
     _oscillator.start(t0);
     gain.gain.setValueAtTime(0, t0);
@@ -144,7 +162,6 @@ const Synth = () => {
         <Heading size='md'>Web Synthesizer (Beta)</Heading>
       </CardHeader>
 
-      {audioCtx && oscillator && gain ?
       <CardBody pt={0}>
         {/* overflowX="scroll" overflowY="hidden" */}
         <HStack spacing="10px" align="start" height="300px">
@@ -182,18 +199,23 @@ const Synth = () => {
                   <option style={{"background": theme.colors.brand[900]}} value='triangle'>Triangle</option>
                 </Select>
                 <WaveShaperCanvas type={type} />
+                <Text fontSize="14px">Semi</Text>
+                <Text fontSize="14px">Det</Text>
               </Box>
             </HStack>
           </Box>
 
           {/* Filter */}
-          <Box bg={theme.colors.brand[900]} color="white" p={2} borderRadius="8px" minWidth="200px" height="100%" >
-            <Heading size='xs'>
+          <Box bg={theme.colors.brand[800]} color="white" borderRadius="8px" height="100%" >
+            <Heading size='xs' p={2} pb={1}>
                 Filter{" "}
                 <Tooltip label='フィルター：ローカット・ハイカットができる'>
                   <QuestionIcon color={theme.colors.brand[700]} />
                 </Tooltip>
               </Heading>
+
+              <FilterCanvas audioCtx={audioCtx} analyser={analyser} filterFreq={filterFreq} filterQ={filterQ} />
+              <FrequencySlider filterFreq={filterFreq} setFilterFreq={setFilterFreq} filterQ={filterQ} setFilterQ={setFilterQ} />
           </Box>
 
           {/* Amp, Env */}
@@ -301,7 +323,6 @@ const Synth = () => {
           }}
         >play 440Hz (test)</Button>
       </CardBody>
-      : <></>}
     </Card>
   )
 }
