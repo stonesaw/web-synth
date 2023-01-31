@@ -28,7 +28,7 @@ export const FrequencySlider = ({
 }: Props) => {
   const handleFreqChange = (value: number) => setFilterFreq(value)
   const handleQChange = (value: number) => setFilterQ(value)
-  const MAX = 20000;
+  const MAX = 12000;
   const MIN = 0;
 
   return (

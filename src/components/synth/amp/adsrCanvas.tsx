@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { theme } from '@/libs/theme';
 import { ATTACK_MAX_MS, ATTACK_MIN_MS } from '@/providers/synth'
 
@@ -24,6 +24,7 @@ export const ADSRCanvas = ({
   setRelease
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [dragFlag, setDragFlag, ] = useState("");
 
   const px = 10;
   const py = 12;
@@ -46,8 +47,6 @@ export const ADSRCanvas = ({
       attackMs <= 1000 ?
       (attackMs - ATTACK_MIN_MS) / (1000 - ATTACK_MIN_MS) * 0.5 :
       0.5 + (attackMs - 1000) / (ATTACK_MAX_MS - 1000) / 2
-      // 20000 ... 1
-      // 1000 ... 0.5
     )
   }
 
@@ -202,7 +201,7 @@ export const ADSRCanvas = ({
         updateCanvas(canvas, context, a, d, s, r);
       }
     }
-  })
+  }, [attack, setAttack, decay, setDecay, sustain, setSustain, release, setRelease])
 
   return (<canvas width="340px" height="160px" ref={canvasRef} />)
 }

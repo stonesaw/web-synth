@@ -16,10 +16,16 @@ import {
   TabPanel,
   TabPanels,
   Tooltip,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuOptionGroup,
+  MenuItemOption,
 } from '@chakra-ui/react'
-import { QuestionIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, QuestionIcon } from '@chakra-ui/icons';
 
 import { theme } from '@/libs/theme'
+import { capitalizeFirstLetter } from '@/libs/utils'
 import { BasicOscillatorType, isBasicOscillatorType } from '@/providers/synth';
 import { ButtonOnce } from '@/components/synth/ButtonOnce';
 import { GainSlider } from '@/components/synth/osc/gainSlider';
@@ -62,11 +68,12 @@ const Synth = () => {
   const [gain, setGain] = useState<GainNode | null>(null);
   const [filter, setFilter] = useState<BiquadFilterNode | null>(null);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const [analyzeData, setAnalyzeData] = useState<Uint8Array>(new Uint8Array(1024));
   const [isStop, setIsStop] = useState<Boolean>(true);
   const [type, setType] = useState<BasicOscillatorType>("sine");
   const [intervalID, setIntervalID] = useState<any>(null);
-  const [filterFreq, setFilterFreq] = useState<number>(20000); // 0 ~ 20k
-  const [filterQ, setFilterQ] = useState<number>(25); // 0 ~ 50
+  const [filterFreq, setFilterFreq] = useState<number>(12000); // 0 ~ 20k
+  const [filterQ, setFilterQ] = useState<number>(5); // 0 ~ 50
 
   const [attack, setAttack] = useState(100);   // attack (ms)
   const [decay, setDecay] = useState(300);     // decay (ms)
@@ -91,7 +98,17 @@ const Synth = () => {
     setOscillator(new OscillatorNode(_audioCtx));
     setGain(new GainNode(_audioCtx));
     setFilter(new BiquadFilterNode(_audioCtx));
-    setAnalyser(new AnalyserNode(_audioCtx, {smoothingTimeConstant: 0.7, fftSize: 1024}));
+    const _analyzer = new AnalyserNode(_audioCtx);
+    setAnalyser(_analyzer);
+
+    // setInterval(() => {
+    //   _analyzer.getByteFrequencyData(analyzeData);
+    //   for (let i = 0; i < 1024; i++) {
+    //     if (analyzeData[i] != 0) {
+    //       console.log(i, analyzeData[i]);
+    //     }
+    //   }
+    // }, 100)
 
     console.log("done init osc");
   }
@@ -107,8 +124,9 @@ const Synth = () => {
     const _oscillator = new OscillatorNode(audioCtx);
 
     filter.type = "lowpass";
-    filter.frequency.value = 1000;
-    filter.Q.value = 0;
+    filter.frequency.value = filterFreq;
+    filter.Q.value = filterQ;
+    filter.gain.value = 0;
 
     _oscillator.type = type;
     _oscillator.connect(gain);
@@ -169,7 +187,7 @@ const Synth = () => {
           <Box bg={theme.colors.brand[700]} color="white" p={2} borderRadius="8px" minWidth="100px" height="100%">
             <Heading size='xs'>
                 Sub{" "}
-                <Tooltip label='フィルター：ローカット・ハイカットができる'>
+                <Tooltip label='サブオシレーター：低音を付加できるオシレーター'>
                   <QuestionIcon color={theme.colors.gray[300]} />
                 </Tooltip>
               </Heading>
@@ -186,18 +204,36 @@ const Synth = () => {
             <HStack height="100%" align="start">
               <GainSlider />
               <Box p={2}>
-                <Select
-                  defaultValue='sine'
-                  variant="flushed"
-                  onChange={(e) => {
-                    const input = e.target.value;
-                    if (isBasicOscillatorType(input)) { setType(input); }
-                  }}>
-                  <option style={{"background": theme.colors.brand[900]}} value='sine'>Sine</option>
-                  <option style={{"background": theme.colors.brand[900]}} value='square'>Square</option>
-                  <option style={{"background": theme.colors.brand[900]}} value='sawtooth'>Sawtooth</option>
-                  <option style={{"background": theme.colors.brand[900]}} value='triangle'>Triangle</option>
-                </Select>
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    rightIcon={<ChevronDownIcon />}
+                    w="100%"
+                    variant="outline"
+                    bg={theme.colors.brand[900]}
+                    borderColor={theme.colors.brand[400]}
+                    textAlign="left"
+                    _hover={{bg: theme.colors.brand[800]}}
+                    _active={{bg: theme.colors.brand[800]}}
+                    _expanded={{bg: theme.colors.brand[800]}}
+                  >
+                    {capitalizeFirstLetter(type)}
+                  </MenuButton>
+                  <MenuList bg={theme.colors.brand[900]} borderColor={theme.colors.brand[400]}>
+                    <MenuOptionGroup
+                      defaultValue='sine'
+                      onChange={(value) => {
+                        const t = String(value);
+                        if (isBasicOscillatorType(t)) { setType(t); }
+                      }}
+                    >
+                      <MenuItemOption bg={theme.colors.brand[900]} value='sine'>Sine</MenuItemOption>
+                      <MenuItemOption bg={theme.colors.brand[900]} value='square'>Square</MenuItemOption>
+                      <MenuItemOption bg={theme.colors.brand[900]} value='sawtooth'>Sawtooth</MenuItemOption>
+                      <MenuItemOption bg={theme.colors.brand[900]} value='triangle'>Triangle</MenuItemOption>
+                    </MenuOptionGroup>
+                  </MenuList>
+                </Menu>
                 <WaveShaperCanvas type={type} />
                 <Text fontSize="14px">Semi</Text>
                 <Text fontSize="14px">Det</Text>
@@ -214,7 +250,7 @@ const Synth = () => {
                 </Tooltip>
               </Heading>
 
-              <FilterCanvas audioCtx={audioCtx} analyser={analyser} filterFreq={filterFreq} filterQ={filterQ} />
+              <FilterCanvas audioCtx={audioCtx} analyzeData={analyzeData} filterFreq={filterFreq} filterQ={filterQ} />
               <FrequencySlider filterFreq={filterFreq} setFilterFreq={setFilterFreq} filterQ={filterQ} setFilterQ={setFilterQ} />
           </Box>
 
