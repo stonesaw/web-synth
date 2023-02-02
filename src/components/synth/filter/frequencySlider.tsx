@@ -37,8 +37,9 @@ export const FrequencySlider = ({
         <Text w="80px" m="0">Freq.</Text>
         <NumberInput
           size="xs"
-          borderColor="gray.300"
           variant="flushed"
+          allowMouseWheel
+          borderColor="gray.300"
           max={MAX}
           min={MIN}
           value={filterFreq}
@@ -70,8 +71,9 @@ export const FrequencySlider = ({
         <Text w="80px" m="0">Q.</Text>
         <NumberInput
           size="xs"
-          borderColor="gray.300"
           variant="flushed"
+          allowMouseWheel
+          borderColor="gray.300"
           max={50}
           min={0}
           value={filterQ}

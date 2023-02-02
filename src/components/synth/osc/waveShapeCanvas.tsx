@@ -8,7 +8,7 @@ interface Props {
   type: BasicOscillatorType
 }
 
-export const WaveShaperCanvas = ({type}: Props) => {
+export const WaveShapeCanvas = ({type}: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export const WaveShaperCanvas = ({type}: Props) => {
   }, [type])
 
   return (
-    <Box p={1}>
+    <Box pt={1}>
       <canvas width="160px" height="160px" ref={canvasRef}></canvas>
     </Box>
   )

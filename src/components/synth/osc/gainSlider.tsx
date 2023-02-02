@@ -10,21 +10,22 @@ import {
   NumberInputField,
   HStack,
 } from '@chakra-ui/react'
-import { useState } from 'react';
 
-/*
+interface Props {
+  gain: number,
+  setGain: (gain: number) => void
+}
 
-TODO: 実際にオシレーターのGain を変更する
-*/
-
-export const GainSlider = () => {
-  const [gain, setGain] = useState<number>(0);
+export const GainSlider = ({
+  gain,
+  setGain
+}: Props) => {
   const handleChange = (value: number) => setGain(value)
   const MAX = 6;
   const MIN = -40;
 
   return (
-    <Box py={2} px={1} textAlign="center" height="100%">
+    <Box py={2} pl={1} textAlign="center" height="100%">
       <Text w="80px" m="0">Gain</Text>
       <Box height="70%" py={4}>
         <Slider
@@ -43,11 +44,13 @@ export const GainSlider = () => {
         </Slider>
       </Box>
 
-      <HStack>
+      <HStack justifyContent="center">
         <NumberInput
           size="xs"
-          borderColor="gray.300"
           variant="flushed"
+          allowMouseWheel
+          borderColor={theme.colors.brand[400]}
+          focusBorderColor={theme.colors.brand[400]}
           max={MAX}
           min={MIN}
           value={gain}

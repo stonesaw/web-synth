@@ -29,8 +29,9 @@ export const AmpInput = ({
       <HStack spacing="0.2rem" color="cyan.300">
         <NumberInput
           size="xs"
-          borderColor="cyan.400"
           variant="flushed"
+          allowMouseWheel
+          borderColor="cyan.400"
           focusBorderColor="cyan.300"
           min={min}
           max={max}

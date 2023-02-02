@@ -8,7 +8,6 @@ import {
   HStack,
   VStack,
   Box,
-  Select,
   Button,
   Tab,
   Tabs,
@@ -16,23 +15,23 @@ import {
   TabPanel,
   TabPanels,
   Tooltip,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuOptionGroup,
-  MenuItemOption,
+  Divider,
 } from '@chakra-ui/react'
-import { ChevronDownIcon, QuestionIcon } from '@chakra-ui/icons';
+import { QuestionIcon } from '@chakra-ui/icons';
 
 import { theme } from '@/libs/theme'
-import { capitalizeFirstLetter } from '@/libs/utils'
-import { BasicOscillatorType, isBasicOscillatorType } from '@/providers/synth';
+import { BasicOscillatorType } from '@/providers/synth';
+
 import { ButtonOnce } from '@/components/synth/ButtonOnce';
+
 import { GainSlider } from '@/components/synth/osc/gainSlider';
-import { WaveShaperCanvas } from '@/components/synth/osc/waveShapeCanvas';
+import { WaveShapeCanvas } from '@/components/synth/osc/waveShapeCanvas';
+import { WaveShapeMenu } from '@/components/synth/osc/waveShapeMenu';
+import { OscParams } from '@/components/synth/osc/oscParams';
 import { Amp } from '@/components/synth/amp/';
 import { FilterCanvas } from '@/components/synth/filter/filterCanvas';
 import { FrequencySlider } from '@/components/synth/filter/frequencySlider';
+import { Keyboard } from '@/components/synth/keyboard';
 
 
 // Amp 実装参考
@@ -72,6 +71,11 @@ const Synth = () => {
   const [isStop, setIsStop] = useState<Boolean>(true);
   const [type, setType] = useState<BasicOscillatorType>("sine");
   const [intervalID, setIntervalID] = useState<any>(null);
+  const [subOsc, setSubOsc] = useState<boolean>(false);
+  const [subOscGain, setSubOscGain] = useState<number>(0);
+  const [osc1Gain, setOsc1Gain] = useState<number>(0); // 0 ~ 20k
+  const [osc1Semi, setOsc1Semi] = useState<number>(0); // 0 ~ 20k
+  const [osc1Detune, setOsc1Detune] = useState<number>(0); // 0 ~ 20k
   const [filterFreq, setFilterFreq] = useState<number>(12000); // 0 ~ 20k
   const [filterQ, setFilterQ] = useState<number>(5); // 0 ~ 50
 
@@ -113,7 +117,7 @@ const Synth = () => {
     console.log("done init osc");
   }
 
-  const startAmp = () => {
+  const startAmp = (pitch: number) => {
     if (!audioCtx) { initAudio(); }
     if (!audioCtx || !oscillator || !gain || !filter || !analyser) {
       console.log("error: Can't use Audio Context!")
@@ -129,6 +133,7 @@ const Synth = () => {
     filter.gain.value = 0;
 
     _oscillator.type = type;
+    _oscillator.detune.value = osc1Detune;
     _oscillator.connect(gain);
     gain.connect(filter).connect(analyser).connect(audioCtx.destination);
     let t0 = audioCtx.currentTime;
@@ -142,7 +147,7 @@ const Synth = () => {
     gain.gain.setTargetAtTime(t2Value, t1, t2);
     setIsStop(false);
 
-    _oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+    _oscillator.frequency.setValueAtTime(pitch, audioCtx.currentTime);
     setOscillator(_oscillator);
   }
 
@@ -169,7 +174,7 @@ const Synth = () => {
   }
 
   return (
-    <Card bg={theme.colors.brand[600]} color="white">
+    <Card bg={theme.colors.brand[600]} color="white" minWidth="min-content">
       <CardHeader>
         <ButtonOnce
           flag={!(audioCtx && oscillator && gain)}
@@ -185,12 +190,18 @@ const Synth = () => {
         <HStack spacing="10px" align="start" height="300px">
           {/* Sub */}
           <Box bg={theme.colors.brand[700]} color="white" p={2} borderRadius="8px" minWidth="100px" height="100%">
-            <Heading size='xs'>
-                Sub{" "}
-                <Tooltip label='サブオシレーター：低音を付加できるオシレーター'>
-                  <QuestionIcon color={theme.colors.gray[300]} />
-                </Tooltip>
-              </Heading>
+            <Button
+              // variant="outline"
+              w="full"
+              isActive={subOsc}
+              bg={subOsc ? theme.colors.brand[400] : theme.colors.brand[800]}
+              // borderColor={subOsc ? "white" : theme.colors.brand[900]}
+              color={subOsc ? "black" : "white"}
+              _focus={{bg: subOsc ? theme.colors.brand[400] : theme.colors.brand[800]}}
+              onClick={() => setSubOsc(!subOsc)}
+            >
+              Sub
+            </Button>
           </Box>
 
           {/* OSC */}
@@ -201,42 +212,13 @@ const Synth = () => {
                 <QuestionIcon color={theme.colors.brand[700]} />
               </Tooltip>
             </Heading>
-            <HStack height="100%" align="start">
-              <GainSlider />
+            <HStack height="100%" align="start" spacing={0}>
+              <GainSlider gain={osc1Gain} setGain={setOsc1Gain} />
               <Box p={2}>
-                <Menu>
-                  <MenuButton
-                    as={Button}
-                    rightIcon={<ChevronDownIcon />}
-                    w="100%"
-                    variant="outline"
-                    bg={theme.colors.brand[900]}
-                    borderColor={theme.colors.brand[400]}
-                    textAlign="left"
-                    _hover={{bg: theme.colors.brand[800]}}
-                    _active={{bg: theme.colors.brand[800]}}
-                    _expanded={{bg: theme.colors.brand[800]}}
-                  >
-                    {capitalizeFirstLetter(type)}
-                  </MenuButton>
-                  <MenuList bg={theme.colors.brand[900]} borderColor={theme.colors.brand[400]}>
-                    <MenuOptionGroup
-                      defaultValue='sine'
-                      onChange={(value) => {
-                        const t = String(value);
-                        if (isBasicOscillatorType(t)) { setType(t); }
-                      }}
-                    >
-                      <MenuItemOption bg={theme.colors.brand[900]} value='sine'>Sine</MenuItemOption>
-                      <MenuItemOption bg={theme.colors.brand[900]} value='square'>Square</MenuItemOption>
-                      <MenuItemOption bg={theme.colors.brand[900]} value='sawtooth'>Sawtooth</MenuItemOption>
-                      <MenuItemOption bg={theme.colors.brand[900]} value='triangle'>Triangle</MenuItemOption>
-                    </MenuOptionGroup>
-                  </MenuList>
-                </Menu>
-                <WaveShaperCanvas type={type} />
-                <Text fontSize="14px">Semi</Text>
-                <Text fontSize="14px">Det</Text>
+                <WaveShapeMenu type={type} setType={setType} />
+                <WaveShapeCanvas type={type} />
+                <Divider />
+                <OscParams semi={osc1Semi} setSemi={setOsc1Semi} detune={osc1Detune} setDetune={setOsc1Detune} />
               </Box>
             </HStack>
           </Box>
@@ -346,18 +328,7 @@ const Synth = () => {
           </Box>
         </HStack>
 
-        <Button
-          colorScheme='teal'
-          size='xs'
-          onMouseDown={() => {
-            console.log("AMP start");
-            startAmp();
-          }}
-          onMouseUp={() => {
-            console.log("AMP stop");
-            stopAmp();
-          }}
-        >play 440Hz (test)</Button>
+        <Keyboard startAmp={startAmp} stopAmp={stopAmp} />
       </CardBody>
     </Card>
   )
