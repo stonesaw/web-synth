@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { theme } from '@/libs/theme';
 import { ATTACK_MAX_MS, ATTACK_MIN_MS } from '@/providers/synth'
+import { clamp } from '@/libs/utils';
 
 interface Props {
   attack: number,
@@ -29,10 +30,6 @@ export const ADSRCanvas = ({
   const px = 10;
   const py = 12;
   const buttonRadius = 7;
-
-  const minmax = (value: number, min = 0, max = 1) => {
-    return Math.max(min, Math.min(value, max));
-  }
 
   const toAttackMs = (attackPercentage: number) => {
     return (
@@ -183,15 +180,15 @@ export const ADSRCanvas = ({
 
           // move button & line
           if (moveFlag == "a") {
-            a = minmax((mx - px) / (containerW * 0.25));
+            a = clamp((mx - px) / (containerW * 0.25));
             setAttack(Math.floor(toAttackMs(a)));
           } else if (moveFlag == "d") {
-            d = minmax((mx - px - containerW * 0.25) / (containerW * 0.25));
+            d = clamp((mx - px - containerW * 0.25) / (containerW * 0.25));
             setDecay(Math.floor(toAttackMs(d)));
-            s = minmax(1 - (my - py) / containerY);
+            s = clamp(1 - (my - py) / containerY);
             setSustain(Math.round(s * 100));
           } else if (moveFlag == "r") {
-            r = minmax((mx - px - containerW * 0.75) / (containerW * 0.25));
+            r = clamp((mx - px - containerW * 0.75) / (containerW * 0.25));
             setRelease(Math.floor(toAttackMs(r)));
           }
 

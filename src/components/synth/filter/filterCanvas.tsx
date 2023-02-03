@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { theme } from '@/libs/theme';
-import { get } from 'https';
 
 interface Props {
   audioCtx: AudioContext | null,
@@ -16,7 +15,7 @@ export const FilterCanvas = ({
   filterQ,
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const MAX = 12000;
+  const MAX = 20500;
   const MIN = 0;
 
   useEffect(() => {

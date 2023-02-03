@@ -2,11 +2,34 @@ export const capitalizeFirstLetter = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// ノートナンバー (C4 = 60) を 周波数 (C4 = 440Hz) に変換
+export const clamp = (value: number, min = 0, max = 1) => {
+  return Math.max(min, Math.min(value, max));
+}
+
+// e.g. "C4" -> 440 (Hz)
 export const noteNameToFrequency = (noteName: string): number => {
+  const frequency = 440 * Math.pow(2, (noteNameToNoteNumber(noteName) - 60) / 12);
+  return Number(frequency.toFixed(4));
+}
+
+// ノートナンバー (C4 = 60) を 周波数 (C4 = 440Hz) に変換
+// e.g. 60 -> 440
+// C-1 は
+export const noteNumberToFrequency = (noteNumber: number): number => {
+  if (noteNumber < 12 || noteNumber > 127) {
+    throw new Error(`undefined note number (${noteNumber})`);
+  }
+  const frequency = 440 * Math.pow(2, (noteNumber - 60) / 12);
+  console.log(frequency.toFixed(4) + " Hz");
+  return Number(frequency.toFixed(4));
+}
+
+export const noteNameToNoteNumber = (noteName: string): number => {
   const m = noteName.trim().match(/^([a-g][#b]?)(\d+)$/i);
-  if(!m) return 0;
-  const [name, octave] = [m[1].toUpperCase(), +m[2]];
+  if(!m) {
+    throw new Error(`undefined note name ${noteName}`);
+  }
+  const [name, octave] = [capitalizeFirstLetter(m[1]), +m[2]];
   const num = {
     "Cb": -1,
     "C": 0,
@@ -22,16 +45,20 @@ export const noteNameToFrequency = (noteName: string): number => {
     "A#": 10, "Bb": 10,
     "B": 11,
   }[name];
-  // const num = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(name);
   if (typeof num == "number") {
-    const freq = 440 * Math.pow(2, (octave * 12 + num - 57) / 12);
-    return Number(freq.toFixed(4));
+    return ((octave + 1) * 12 + num);
   } else {
-    return 0;
+    throw new Error(`undefined note name ${noteName}`);
   }
 }
 
-// e.g. "C4", "c4" = 60
-// e.g. "c3" = 48
-// export const noteNameToNumber = (noteName: string): number => {
-// }
+// TODO: # only
+export const noteNumberToNoteName = (noteNumber: number, option = {}): string => {
+  if (noteNumber < 12 || noteNumber > 127) {
+    throw new Error(`undefined note number (${noteNumber})`);
+  }
+  const scale = noteNumber % 12;
+  const octave = Math.floor(noteNumber / 12) - 1;
+  const scales = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+  return scales[scale] + String(octave);
+}

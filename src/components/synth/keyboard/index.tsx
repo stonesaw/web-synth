@@ -5,7 +5,7 @@ import {
   Button
 } from '@chakra-ui/react'
 import { useState } from 'react';
-import { noteNameToFrequency } from "@/libs/utils"
+import { noteNumberToNoteName } from "@/libs/utils"
 
 interface Props {
   startAmp: (pitch: number) => void,
@@ -16,10 +16,9 @@ export const Keyboard = ({
   startAmp,
   stopAmp,
 }: Props) => {
-  const scale = [
-    "C3", "C#3", "D3", "D#3", "E3", "F3", "F#3", "G3", "G#3", "A3", "A#3", "B3",
-    "C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4",
-  ];
+  const [octave, setOctave] = useState(3);
+  const C3_NOTE_NUMBER = 48
+  const scale = Array.from({length: 24}, (v, i) => i + C3_NOTE_NUMBER);
 
   return (
     <Box py={2} px={1} textAlign="center" height="100%">
@@ -29,15 +28,15 @@ export const Keyboard = ({
             key={index}
             width="20px"
             height="100px"
-            bg={note.includes("#") ? "black" : "white"}
-            color={note.includes("#") ? "white" : "black"}
+            bg={noteNumberToNoteName(note).includes("#") ? "black" : "white"}
+            color={noteNumberToNoteName(note).includes("#") ? "white" : "black"}
             onMouseDown={() => {
-              startAmp(noteNameToFrequency(note));
+              startAmp(note);
             }}
             onMouseUp={() => {
               stopAmp();
             }}
-          >{note}</Button>
+          >{noteNumberToNoteName(note)}</Button>
         )
       }
     </Box>

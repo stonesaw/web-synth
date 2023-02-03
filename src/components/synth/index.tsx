@@ -20,10 +20,11 @@ import {
 import { QuestionIcon } from '@chakra-ui/icons';
 
 import { theme } from '@/libs/theme'
+import { noteNumberToFrequency } from '@/libs/utils'
 import { BasicOscillatorType } from '@/providers/synth';
 
+import { Knob } from '@/components/synth/knob';
 import { ButtonOnce } from '@/components/synth/ButtonOnce';
-
 import { GainSlider } from '@/components/synth/osc/gainSlider';
 import { WaveShapeCanvas } from '@/components/synth/osc/waveShapeCanvas';
 import { WaveShapeMenu } from '@/components/synth/osc/waveShapeMenu';
@@ -62,21 +63,25 @@ TODO:
 
 
 const Synth = () => {
+  // web audio api
   const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
-  const [oscillator, setOscillator] = useState<OscillatorNode | null>(null);
-  const [gain, setGain] = useState<GainNode | null>(null);
-  const [filter, setFilter] = useState<BiquadFilterNode | null>(null);
-  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const [oscillatorNode, setOscillatorNode] = useState<OscillatorNode | null>(null);
+  const [ampNode, setAmpNode] = useState<GainNode | null>(null);
+  const [oscillatorGainNode, setOscillatorGainNode] = useState<GainNode | null>(null);
+  const [filterNode, setFilterNode] = useState<BiquadFilterNode | null>(null);
+  const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
   const [analyzeData, setAnalyzeData] = useState<Uint8Array>(new Uint8Array(1024));
-  const [isStop, setIsStop] = useState<Boolean>(true);
-  const [type, setType] = useState<BasicOscillatorType>("sine");
   const [intervalID, setIntervalID] = useState<any>(null);
+  const [isStop, setIsStop] = useState<Boolean>(true);
+
+  // params
+  const [type, setType] = useState<BasicOscillatorType>("sine");
   const [subOsc, setSubOsc] = useState<boolean>(false);
   const [subOscGain, setSubOscGain] = useState<number>(0);
-  const [osc1Gain, setOsc1Gain] = useState<number>(0); // 0 ~ 20k
-  const [osc1Semi, setOsc1Semi] = useState<number>(0); // 0 ~ 20k
-  const [osc1Detune, setOsc1Detune] = useState<number>(0); // 0 ~ 20k
-  const [filterFreq, setFilterFreq] = useState<number>(12000); // 0 ~ 20k
+  const [osc1Gain, setOsc1Gain] = useState<number>(100); // TODO: とりあえず 0 ~ 100 %
+  const [osc1Semi, setOsc1Semi] = useState<number>(0);
+  const [osc1Detune, setOsc1Detune] = useState<number>(0);
+  const [filterFreq, setFilterFreq] = useState<number>(20500); // 0 ~ 20.5k
   const [filterQ, setFilterQ] = useState<number>(5); // 0 ~ 50
 
   const [attack, setAttack] = useState(100);   // attack (ms)
@@ -99,11 +104,12 @@ const Synth = () => {
     const _audioCtx = new AudioContext();
 
     setAudioCtx(_audioCtx);
-    setOscillator(new OscillatorNode(_audioCtx));
-    setGain(new GainNode(_audioCtx));
-    setFilter(new BiquadFilterNode(_audioCtx));
+    setOscillatorNode(new OscillatorNode(_audioCtx));
+    setOscillatorGainNode(new GainNode(_audioCtx));
+    setAmpNode(new GainNode(_audioCtx));
+    setFilterNode(new BiquadFilterNode(_audioCtx));
     const _analyzer = new AnalyserNode(_audioCtx);
-    setAnalyser(_analyzer);
+    setAnalyserNode(_analyzer);
 
     // setInterval(() => {
     //   _analyzer.getByteFrequencyData(analyzeData);
@@ -117,53 +123,60 @@ const Synth = () => {
     console.log("done init osc");
   }
 
-  const startAmp = (pitch: number) => {
+  // noteNumber: e.g. C4 = 60
+  const startAmp = (noteNumber: number) => {
     if (!audioCtx) { initAudio(); }
-    if (!audioCtx || !oscillator || !gain || !filter || !analyser) {
+    if (!audioCtx || !oscillatorNode || !oscillatorGainNode || !ampNode || !filterNode || !analyserNode) {
       console.log("error: Can't use Audio Context!")
       return;
     }
-    if (!isStop) { oscillator.stop(0); }
+    if (!isStop) { oscillatorNode.stop(0); }
 
     const _oscillator = new OscillatorNode(audioCtx);
 
-    filter.type = "lowpass";
-    filter.frequency.value = filterFreq;
-    filter.Q.value = filterQ;
-    filter.gain.value = 0;
-
+    filterNode.type = "lowpass";
+    filterNode.frequency.value = filterFreq;
+    filterNode.Q.value = filterQ;
     _oscillator.type = type;
     _oscillator.detune.value = osc1Detune;
-    _oscillator.connect(gain);
-    gain.connect(filter).connect(analyser).connect(audioCtx.destination);
+    oscillatorGainNode.gain.value = osc1Gain / 100;
+
+    // TODO: insert compressor
+    _oscillator.connect(oscillatorGainNode)
+               .connect(ampNode)
+               .connect(filterNode)
+               .connect(analyserNode)
+               .connect(audioCtx.destination);
+
     let t0 = audioCtx.currentTime;
     _oscillator.start(t0);
-    gain.gain.setValueAtTime(0, t0);
+    ampNode.gain.setValueAtTime(0, t0);
     let t1      = t0 + attack / 1000;  // (at start) + (attack time)
     let t2      = decay / 1000;
     let t2Value = sustain / 100;
 
-    gain.gain.linearRampToValueAtTime(1, t1);
-    gain.gain.setTargetAtTime(t2Value, t1, t2);
+    ampNode.gain.linearRampToValueAtTime(1, t1);
+    ampNode.gain.setTargetAtTime(t2Value, t1, t2);
     setIsStop(false);
 
-    _oscillator.frequency.setValueAtTime(pitch, audioCtx.currentTime);
-    setOscillator(_oscillator);
+    const f = noteNumberToFrequency(noteNumber + osc1Semi)
+    _oscillator.frequency.setValueAtTime(f, audioCtx.currentTime);
+    setOscillatorNode(_oscillator);
   }
 
   const stopAmp = () => {
-    if (!audioCtx || !oscillator || !gain) { return }
+    if (!audioCtx || !oscillatorNode || !ampNode) { return }
     if (isStop) { return; }
 
     let t3 = audioCtx.currentTime;
     let t4 = release / 1000;
-    gain.gain.cancelScheduledValues(t3);
-    gain.gain.setValueAtTime(gain.gain.value, t3);
-    gain.gain.setTargetAtTime(0, t3, t4);  // Release
+    ampNode.gain.cancelScheduledValues(t3);
+    ampNode.gain.setValueAtTime(ampNode.gain.value, t3);
+    ampNode.gain.setTargetAtTime(0, t3, t4);  // Release
     setIntervalID(window.setInterval(function() {
       let VALUE_OF_STOP = 1e-3;
-      if (gain.gain.value < VALUE_OF_STOP) {
-        oscillator.stop(0);
+      if (ampNode.gain.value < VALUE_OF_STOP) {
+        oscillatorNode.stop(0);
         if (intervalID !== null) {
           window.clearInterval(intervalID);
           setIntervalID(null);
@@ -177,7 +190,7 @@ const Synth = () => {
     <Card bg={theme.colors.brand[600]} color="white" minWidth="min-content">
       <CardHeader>
         <ButtonOnce
-          flag={!(audioCtx && oscillator && gain)}
+          flag={!(audioCtx && oscillatorNode && ampNode)}
           onClick={() => initAudio()}
         >
           Load Web Audio API (Click here!)
@@ -191,17 +204,26 @@ const Synth = () => {
           {/* Sub */}
           <Box bg={theme.colors.brand[700]} color="white" p={2} borderRadius="8px" minWidth="100px" height="100%">
             <Button
-              // variant="outline"
+              variant="outline"
               w="full"
-              isActive={subOsc}
-              bg={subOsc ? theme.colors.brand[400] : theme.colors.brand[800]}
-              // borderColor={subOsc ? "white" : theme.colors.brand[900]}
+              bg={subOsc ? theme.colors.brand[400] : theme.colors.brand[700]}
+              borderColor={theme.colors.brand[800]}
+              borderRadius="0px"
               color={subOsc ? "black" : "white"}
-              _focus={{bg: subOsc ? theme.colors.brand[400] : theme.colors.brand[800]}}
+              _focus={{bg: subOsc ? theme.colors.brand[400] : theme.colors.brand[700]}}
+              _hover={{bg: subOsc ? theme.colors.brand[400] : theme.colors.brand[700]}}
               onClick={() => setSubOsc(!subOsc)}
             >
               Sub
             </Button>
+            <Text>Gain</Text>
+            <Knob value={subOscGain} setValue={setSubOscGain} min={0} max={100} />
+            <Text>{subOscGain}</Text>
+            <Text>Tone</Text>
+            <Text>Octave</Text>
+            <Text>0, -1, -2</Text>
+            <Text>Transpose</Text>
+            <Text>-48st ~ 48st</Text>
           </Box>
 
           {/* OSC */}
@@ -237,7 +259,7 @@ const Synth = () => {
           </Box>
 
           {/* Amp, Env */}
-          <Box bg={theme.colors.brand[900]} color="white" p={2} borderRadius="8px" height="100%">
+          <Box bg={theme.colors.brand[900]} color="white" p={1} borderRadius="8px" height="100%">
             <Tabs colorScheme="cyan" color={theme.colors.brand[700]} borderBottomColor={theme.colors.brand[700]}>
               <TabList>
                 <Tab _active={{background: "#0000"}}>

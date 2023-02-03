@@ -21,8 +21,10 @@ export const GainSlider = ({
   setGain
 }: Props) => {
   const handleChange = (value: number) => setGain(value)
-  const MAX = 6;
-  const MIN = -40;
+  // const MAX = 6;
+  // const MIN = -40;
+  const MAX = 100;
+  const MIN = 0;
 
   return (
     <Box py={2} pl={1} textAlign="center" height="100%">
@@ -58,7 +60,7 @@ export const GainSlider = ({
         >
           <NumberInputField p={1} w={10} textAlign="center"/>
         </NumberInput>
-        <Text>dB</Text>
+        <Text>%</Text>
       </HStack>
     </Box>
   )

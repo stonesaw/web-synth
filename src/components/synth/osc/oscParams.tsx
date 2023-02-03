@@ -31,7 +31,7 @@ export const OscParams = ({
           focusBorderColor={theme.colors.brand[400]}
           min={-24}
           max={24}
-          value={semi}
+          defaultValue={semi}
           onChange={(v) => setSemi(Number(v))}
         >
           <NumberInputField p={1} w={8} textAlign="center"/>
@@ -49,7 +49,7 @@ export const OscParams = ({
           focusBorderColor={theme.colors.brand[400]}
           min={-50}
           max={50}
-          value={detune}
+          defaultValue={detune}
           onChange={(v) => setDetune(Number(v))}
         >
           <NumberInputField p={1} w={8} textAlign="center"/>
