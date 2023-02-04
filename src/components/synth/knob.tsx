@@ -1,43 +1,43 @@
 import { useState, useEffect, useRef } from 'react';
 import { theme } from '@/libs/theme';
-import { clamp } from '@/libs/utils';
+import { radian } from '@/libs/utils';
 
 interface Props {
-  value: number,
-  setValue: (v: number) => void
-  min: number,
-  max: number,
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+  circleFillColor?: string;
+  circleEmptyColor?: string;
+  barColor?: string;
+  isDisabled?: boolean;
 }
 
 export const Knob = ({
   value,
-  setValue,
+  onChange,
   min,
-  max
+  max,
+  circleFillColor,
+  circleEmptyColor,
+  barColor,
+  isDisabled,
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // const [mouseDownFlag, setMouseDownFlag] = useState(false);
   // const [mouseOffsetY, setMouseOffsetY] = useState(0);
 
-  const radian = (deg: number) => {
-    return deg * Math.PI / 180;
-  }
-
-  const hover = (canvas: HTMLCanvasElement | null) => {
-    if (canvas) {
-      canvas.style.cursor = "pointer";
-    }
-    return undefined;
-  }
-
-  let mouseDownFlag = false;
-  let my = 0;
-  let mouseOffsetY = 0;
+  var mouseDownFlag = false;
+  var my = 0;
+  var mouseOffsetY = 0;
 
   useEffect(() => {
-    console.log("a")
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
+
+    // TODO: やっぱり useState を使った方がいい
+    // マウスが動くたびにロードされる
+    // console.log("load knob");
 
     window.addEventListener('mousemove', (event) => {
       const rect = canvas.getBoundingClientRect();
@@ -45,8 +45,8 @@ export const Knob = ({
       my = event.clientY - rect.top;
 
       if (mouseDownFlag) {
-        // TODO: valueが更新されない
-        setValue(clamp(value + Math.floor((mouseOffsetY - my) / 2), min, max))
+        onChange(Math.floor((mouseOffsetY - my) / 2));
+        // setValue(clamp(value + Math.floor((mouseOffsetY - my) / 2), min, max))
         // console.log(my - mouseOffsetY);
       }
     })
@@ -66,7 +66,6 @@ export const Knob = ({
       document.body.classList.remove("noselect");
     })
   })
-  // }, [canvasRef])
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -78,23 +77,28 @@ export const Knob = ({
           const h = canvas.height;
           const r = w / 2;
           const lineW = 4;
-          const percent = value / max;
+          const percent = (value - min) / (max - min);
 
           context.clearRect(0, 0, w, h);
 
           // circle
+          if (isDisabled) {
+            context.fillStyle = theme.colors.gray[400];
+          } else {
+            context.fillStyle = circleFillColor || theme.colors.brand[500];
+          }
+
           context.beginPath();
           context.moveTo(r, r);
-          context.fillStyle = theme.colors.brand[500];
           context.arc(r, r, r, radian(90), radian(90 + percent * 270), false);
           context.arc(r, r, r - lineW, radian(90 + percent * 270), radian(90), true);
           context.fill();
 
           // circle
           if (percent + 0.05 < 1) {
+            context.fillStyle = circleEmptyColor || theme.colors.brand[900];
             context.beginPath();
             context.moveTo(r, r);
-            context.fillStyle = theme.colors.brand[900];
             context.arc(r, r, r, radian(90 + (percent + 0.05) * 270), radian(0), false);
             context.arc(r, r, r - lineW, radian(0), radian(90 + (percent + 0.05) * 270), true);
             context.fill();
@@ -102,7 +106,7 @@ export const Knob = ({
 
           // bar
           context.lineWidth = 2;
-          context.strokeStyle = theme.colors.brand[900];
+          context.strokeStyle = barColor || theme.colors.brand[900];
           context.beginPath();
           context.moveTo(r, r);
           context.lineTo(r * Math.cos(radian(90 + percent * 270)) + r, r * Math.sin(radian(90 + percent * 270)) + r);
@@ -115,6 +119,6 @@ export const Knob = ({
           width="40px"
           height="40px"
           ref={canvasRef}
-          onMouseOver={hover(canvasRef.current)}
+          style={{"cursor": "pointer"}}
          />
 }

@@ -6,6 +6,11 @@ export const clamp = (value: number, min = 0, max = 1) => {
   return Math.max(min, Math.min(value, max));
 }
 
+// degree to radian
+export const radian = (degree: number) => {
+  return degree * Math.PI / 180;
+}
+
 // e.g. "C4" -> 440 (Hz)
 export const noteNameToFrequency = (noteName: string): number => {
   const frequency = 440 * Math.pow(2, (noteNameToNoteNumber(noteName) - 60) / 12);

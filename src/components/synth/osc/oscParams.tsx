@@ -31,8 +31,12 @@ export const OscParams = ({
           focusBorderColor={theme.colors.brand[400]}
           min={-24}
           max={24}
+          isValidCharacter={(v) => /^[0-9\-+]$/.test(v)}
           defaultValue={semi}
-          onChange={(v) => setSemi(Number(v))}
+          onBlur={(e) => {
+            const v = Number(e.target.value);
+            setSemi(Math.floor(isNaN(v) ? 0 : v));
+          }}
         >
           <NumberInputField p={1} w={8} textAlign="center"/>
         </NumberInput>
@@ -49,8 +53,12 @@ export const OscParams = ({
           focusBorderColor={theme.colors.brand[400]}
           min={-50}
           max={50}
+          isValidCharacter={(v) => /^[0-9\-+]$/.test(v)}
           defaultValue={detune}
-          onChange={(v) => setDetune(Number(v))}
+          onBlur={(e) => {
+            const v = Number(e.target.value);
+            setDetune(Math.floor(isNaN(v) ? 0 : v));
+          }}
         >
           <NumberInputField p={1} w={8} textAlign="center"/>
         </NumberInput>

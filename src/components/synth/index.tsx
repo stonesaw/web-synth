@@ -33,6 +33,7 @@ import { Amp } from '@/components/synth/amp/';
 import { FilterCanvas } from '@/components/synth/filter/filterCanvas';
 import { FrequencySlider } from '@/components/synth/filter/frequencySlider';
 import { Keyboard } from '@/components/synth/keyboard';
+import { SubOsc } from '@/components/synth/subOsc';
 
 
 // Amp 実装参考
@@ -76,18 +77,21 @@ const Synth = () => {
 
   // params
   const [type, setType] = useState<BasicOscillatorType>("sine");
-  const [subOsc, setSubOsc] = useState<boolean>(false);
-  const [subOscGain, setSubOscGain] = useState<number>(0);
   const [osc1Gain, setOsc1Gain] = useState<number>(100); // TODO: とりあえず 0 ~ 100 %
   const [osc1Semi, setOsc1Semi] = useState<number>(0);
   const [osc1Detune, setOsc1Detune] = useState<number>(0);
+  const [subOsc, setSubOsc] = useState<boolean>(false);
+  const [subOscGain, setSubOscGain] = useState<number>(50);
+  const [subOscOctave, setSubOscOctave] = useState<number>(-1);
+  const [subOscTranspose, setSubOscTranspose] = useState<number>(0); // -48 ~ 48 (st)
+  const [subOscType, setSubOscType] = useState<"sync" | BasicOscillatorType>("sync");
   const [filterFreq, setFilterFreq] = useState<number>(20500); // 0 ~ 20.5k
   const [filterQ, setFilterQ] = useState<number>(5); // 0 ~ 50
 
-  const [attack, setAttack] = useState(100);   // attack (ms)
+  const [attack, setAttack] = useState(10);   // attack (ms)
   const [decay, setDecay] = useState(300);     // decay (ms)
   const [sustain, setSustain] = useState(70); // sustain (%)
-  const [release, setRelease] = useState(300); // release (ms)
+  const [release, setRelease] = useState(100); // release (ms)
 
   const [env1attack, setEnv1Attack] = useState(100);   // attack (ms)
   const [env1decay, setEnv1Decay] = useState(300);     // decay (ms)
@@ -203,27 +207,18 @@ const Synth = () => {
         <HStack spacing="10px" align="start" height="300px">
           {/* Sub */}
           <Box bg={theme.colors.brand[700]} color="white" p={2} borderRadius="8px" minWidth="100px" height="100%">
-            <Button
-              variant="outline"
-              w="full"
-              bg={subOsc ? theme.colors.brand[400] : theme.colors.brand[700]}
-              borderColor={theme.colors.brand[800]}
-              borderRadius="0px"
-              color={subOsc ? "black" : "white"}
-              _focus={{bg: subOsc ? theme.colors.brand[400] : theme.colors.brand[700]}}
-              _hover={{bg: subOsc ? theme.colors.brand[400] : theme.colors.brand[700]}}
-              onClick={() => setSubOsc(!subOsc)}
-            >
-              Sub
-            </Button>
-            <Text>Gain</Text>
-            <Knob value={subOscGain} setValue={setSubOscGain} min={0} max={100} />
-            <Text>{subOscGain}</Text>
-            <Text>Tone</Text>
-            <Text>Octave</Text>
-            <Text>0, -1, -2</Text>
-            <Text>Transpose</Text>
-            <Text>-48st ~ 48st</Text>
+            <SubOsc
+              subOsc={subOsc}
+              setSubOsc={setSubOsc}
+              subOscGain={subOscGain}
+              setSubOscGain={setSubOscGain}
+              subOscType={subOscType}
+              setSubOscType={setSubOscType}
+              subOscOctave={subOscOctave}
+              setSubOscOctave={setSubOscOctave}
+              subOscTranspose={subOscTranspose}
+              setSubOscTranspose={setSubOscTranspose}
+            />
           </Box>
 
           {/* OSC */}
