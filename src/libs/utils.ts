@@ -25,7 +25,6 @@ export const noteNumberToFrequency = (noteNumber: number): number => {
     throw new Error(`undefined note number (${noteNumber})`);
   }
   const frequency = 440 * Math.pow(2, (noteNumber - 60) / 12);
-  console.log(frequency.toFixed(4) + " Hz");
   return Number(frequency.toFixed(4));
 }
 

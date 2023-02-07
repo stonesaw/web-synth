@@ -10,7 +10,7 @@ interface Props {
 export const ButtonOnce = ({children, flag, onClick}: Props)  => {
   return (
     (
-      flag ? <Button onClick={() => onClick()}>{children}</Button> : <></>
+      flag ? <Button color="black" onClick={() => onClick()}>{children}</Button> : <></>
     )
   )
 }

@@ -4,8 +4,7 @@ import { clamp, radian } from '@/libs/utils';
 
 interface Props {
   value: number;
-  onChange?: (v: number) => void;
-  onChangePercent?: (v: number) => void;
+  onChange: (frequency: number) => void;
   min: number;
   max: number;
   size?: number;
@@ -15,10 +14,9 @@ interface Props {
   isDisabled?: boolean;
 }
 
-export const Knob = ({
+export const FrequencyKnob = ({
   value,
   onChange,
-  onChangePercent,
   min,
   max,
   size,
@@ -35,6 +33,24 @@ export const Knob = ({
   var my = 0;
   var mouseOffsetY = 0;
 
+  // memo
+  // y = nyquist * 2.0 ** (11 * (x - 1) // noctaves
+  // x = log2(y / nyquist) / 11 + 1
+
+  const percentToFrequency = (value: number): number => {
+    const nyquist = 20050; // context.sampleRate * 0.5;
+    const noctaves = Math.log(nyquist / 10.0) / Math.LN2;
+    const v2 = Math.pow(2.0, noctaves * (clamp(value) - 1.0));
+    return Math.round(v2 * nyquist);
+  }
+
+  const frequencyToPercent = (frequency: number): number => {
+    const nyquist = 20050; // context.sampleRate * 0.5;
+    const noctaves = Math.log(nyquist / 10.0) / Math.LN2;
+    const percent = clamp(Math.log2(frequency / nyquist) / noctaves + 1);
+    return Math.round(percent * 100) / 100;
+  }
+
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -49,15 +65,9 @@ export const Knob = ({
       my = event.clientY - rect.top;
 
       if (mouseDownFlag) {
-        if (onChange != undefined) {
-          onChange(Math.floor((mouseOffsetY - my) / 2));
-        }
-
-        if (onChangePercent != undefined) {
-          const percent = (value - min) / (max - min);
-          const mp = (mouseOffsetY - my) / 100;
-          onChangePercent(clamp(percent + mp));
-        }
+        const percent = frequencyToPercent(value);
+        const mousePercent = (mouseOffsetY - my) / 200;
+        onChange(clamp(percentToFrequency(percent + mousePercent), min, max));
         // setValue(clamp(value + Math.floor((mouseOffsetY - my) / 2), min, max))
         // console.log(my - mouseOffsetY);
       }
@@ -91,7 +101,7 @@ export const Knob = ({
           const h = canvas.height;
           const r = w / 2;
           const lineW = _size / 10;
-          const percent = (value - min) / (max - min);
+          const percent = frequencyToPercent(value);
 
           context.clearRect(0, 0, w, h);
 

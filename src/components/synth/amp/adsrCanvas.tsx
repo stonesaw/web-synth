@@ -66,7 +66,7 @@ export const ADSRCanvas = ({
 
     // line
     context.lineWidth = 2;
-    context.strokeStyle = theme.colors.cyan[400];
+    context.strokeStyle = theme.colors.brand[500];
 
     context.beginPath();
     context.moveTo(t0x, t0y);

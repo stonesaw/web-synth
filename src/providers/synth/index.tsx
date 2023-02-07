@@ -14,6 +14,90 @@ export const isBasicOscillatorType = (type: string): type is BasicOscillatorType
   )
 }
 
+export const isBiquadFilterType = (type: string): type is BiquadFilterType => {
+  return (
+    type === "lowpass" ||
+    type === "highpass" ||
+    type === "bandpass" ||
+    type === "lowshelf" ||
+    type === "highshelf" ||
+    type === "peaking" ||
+    type === "notch" ||
+    type === "allpass"
+  )
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode
+
+export const DEFAULT_Q_MAX = 20;
+export const DEFAULT_Q_MIN = -20;
+export const DEFAULT_GAIN_MAX = 30;
+export const DEFAULT_GAIN_MIN = -30;
+
+export const filterQGainUsedFlags: {
+  [key in BiquadFilterType]: {
+    "Q": boolean,
+    "GAIN": boolean,
+    "Q_RANGE"?: {"MAX": number, "MIN": number},
+    "GAIN_RANGE"?: {"MAX": number, "MIN": number},
+  }
+}
+= {
+  "lowpass": {
+    "Q": true,
+    "GAIN": false
+  },
+  "highpass": {
+    "Q": true,
+    "GAIN": false
+  },
+  "bandpass": {
+    "Q": true,
+    "GAIN": false,
+    "Q_RANGE": {"MAX": DEFAULT_Q_MAX, "MIN": 0},
+  },
+  "lowshelf": {
+    "Q": false,
+    "GAIN": true
+  },
+  "highshelf": {
+    "Q": false,
+    "GAIN": true
+  },
+  "peaking": {
+    "Q": true,
+    "GAIN": true,
+    "Q_RANGE": {"MAX": DEFAULT_Q_MAX, "MIN": 0},
+  },
+  "notch": {
+    "Q": true,
+    "GAIN": false
+  },
+  "allpass": {
+    "Q": true,
+    "GAIN": false
+  },
+}
+
+export const getQRange = (filterType: BiquadFilterType, minmax: "MIN" | "MAX") => {
+  const qRange = filterQGainUsedFlags[filterType]["Q_RANGE"];
+  if (qRange) {
+    return qRange[minmax];
+  } else {
+    return (minmax == "MAX" ? DEFAULT_Q_MAX : DEFAULT_Q_MIN);
+  }
+}
+
+export const getGainRange = (filterType: BiquadFilterType, minmax: "MIN" | "MAX") => {
+  const gainRange = filterQGainUsedFlags[filterType]["GAIN_RANGE"];
+  if (gainRange) {
+    return gainRange[minmax];
+  } else {
+    return (minmax == "MAX" ? DEFAULT_GAIN_MAX : DEFAULT_GAIN_MIN);
+  }
+}
+
+
 interface SynthContextProps {
   audioCtx: AudioContext | null,
   setAudioCtx: (ctx: AudioContext | null) => void;

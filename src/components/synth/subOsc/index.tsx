@@ -12,13 +12,13 @@ import {
   NumberInput,
   NumberInputField,
 } from '@chakra-ui/react'
+import { ChevronDownIcon } from '@chakra-ui/icons';
 
 import { theme } from '@/libs/theme'
-import { capitalizeFirstLetter, clamp, noteNumberToFrequency } from '@/libs/utils'
+import { capitalizeFirstLetter, clamp } from '@/libs/utils'
 
-import { Knob } from '@/components/synth/knob';
-import { ChevronDownIcon } from '@chakra-ui/icons';
 import { BasicOscillatorType, isBasicOscillatorType } from '@/providers/synth';
+import { Knob } from '@/components/synth/knob';
 
 interface Props {
   subOsc: boolean;
@@ -70,25 +70,24 @@ export const SubOsc = ({
           max={100}
           isDisabled={!subOsc}
         />
-        {/* floating text */}
-        <Text position="absolute" top="24px" left="30px">{subOscGain} %</Text>
+        <Text position="absolute" top="22px" left="calc(1rem + 18px)">{subOscGain} %</Text>
       </Box>
 
-      <Text pt={1}>Tone</Text>
+      <Text pt={2}>Tone</Text>
       <Menu>
         <MenuButton
           as={Button}
           rightIcon={<ChevronDownIcon />}
           w="90px"
-          variant="outline"
+          // variant="outline"
           size="xs"
           color={subOsc ? theme.colors.brand[500] : "white"}
           bg={theme.colors.brand[700]}
           borderColor={theme.colors.brand[800]}
           textAlign="left"
-          _hover={{bg: theme.colors.brand[700]}}
-          _active={{bg: theme.colors.brand[700]}}
-          _expanded={{bg: theme.colors.brand[700]}}
+          _hover={{bg: theme.colors.brand[600]}}
+          _active={{bg: theme.colors.brand[600]}}
+          _expanded={{bg: theme.colors.brand[600]}}
         >
           {capitalizeFirstLetter(subOscType)}
         </MenuButton>
@@ -111,7 +110,7 @@ export const SubOsc = ({
         </MenuList>
       </Menu>
 
-      <Text pt={1}>Octave</Text>
+      <Text pt={2}>Octave</Text>
       <ButtonGroup size='xs' variant='outline' spacing="1">
         {
           [0, -1, -2].map((v) =>
@@ -128,7 +127,7 @@ export const SubOsc = ({
         }
       </ButtonGroup>
 
-      <Text pt={1}>Transpose</Text>
+      <Text pt={2}>Transpose</Text>
       <HStack spacing="0.2rem" color="white">
         <NumberInput
           size="xs"
