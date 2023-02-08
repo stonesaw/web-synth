@@ -38,14 +38,14 @@ export const FrequencyKnob = ({
   // x = log2(y / nyquist) / 11 + 1
 
   const percentToFrequency = (value: number): number => {
-    const nyquist = 20050; // context.sampleRate * 0.5;
+    const nyquist = 44100 / 2; // audioCtx.sampleRate * 0.5;
     const noctaves = Math.log(nyquist / 10.0) / Math.LN2;
     const v2 = Math.pow(2.0, noctaves * (clamp(value) - 1.0));
     return Math.round(v2 * nyquist);
   }
 
   const frequencyToPercent = (frequency: number): number => {
-    const nyquist = 20050; // context.sampleRate * 0.5;
+    const nyquist = 44100 / 2; // audioCtx.sampleRate * 0.5;
     const noctaves = Math.log(nyquist / 10.0) / Math.LN2;
     const percent = clamp(Math.log2(frequency / nyquist) / noctaves + 1);
     return Math.round(percent * 100) / 100;
@@ -75,7 +75,7 @@ export const FrequencyKnob = ({
 
     canvas.addEventListener('mousedown', () => {
       if (!mouseDownFlag) {
-        document.body.classList.add("noselect");
+        // document.body.classList.add("noselect");
         // eslint-disable-next-line react-hooks/exhaustive-deps
         mouseOffsetY = my;
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,7 +85,7 @@ export const FrequencyKnob = ({
 
     window.addEventListener('mouseup', () => {
       mouseDownFlag = false;
-      document.body.classList.remove("noselect");
+      // document.body.classList.remove("noselect");
     })
   })
 

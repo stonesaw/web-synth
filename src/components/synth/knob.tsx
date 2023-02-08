@@ -65,7 +65,6 @@ export const Knob = ({
 
     canvas.addEventListener('mousedown', () => {
       if (!mouseDownFlag) {
-        document.body.classList.add("noselect");
         // eslint-disable-next-line react-hooks/exhaustive-deps
         mouseOffsetY = my;
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -75,7 +74,6 @@ export const Knob = ({
 
     window.addEventListener('mouseup', () => {
       mouseDownFlag = false;
-      document.body.classList.remove("noselect");
     })
   })
 

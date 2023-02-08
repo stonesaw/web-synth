@@ -79,6 +79,14 @@ export const filterQGainUsedFlags: {
   },
 }
 
+export interface PropertyMatrix {
+  [key: string]: {"AMP"?: number, "ENV1"?: number, "ENV2"?: number, "LFO1"?: number, "LFO2"?: number}
+}
+
+export type modulationsType = "AMP" | "ENV1" | "ENV2" | "LFO1" | "LFO2";
+export const modulations: modulationsType[] = ["AMP", "ENV1", "ENV2", "LFO1", "LFO2"];
+
+
 export const getQRange = (filterType: BiquadFilterType, minmax: "MIN" | "MAX") => {
   const qRange = filterQGainUsedFlags[filterType]["Q_RANGE"];
   if (qRange) {

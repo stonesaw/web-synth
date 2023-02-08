@@ -1,6 +1,45 @@
 # web-synth
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Simple Synthesizer with Web Audio API
+
+## 参考
+Amp 実装
+- https://curtaincall.weblike.jp/portfolio-web-sounder/webaudioapi-basic/envelope-generator
+
+その他フィルターなど
+- https://www.g200kg.com/jp/docs/webaudio/oscillator.html
+- https://g200kg.github.io/web-audio-api-ja/#biquadfilternode
+- https://webaudioapi.com/samples/frequency-response/
+
+
+## TODO
+### オシレーター
+- matrix
+- LFO
+- Osc2
+- canvas (ADSR) の実装変更 ... eventListener を React Styleに
+
+スマホ・タブレットの対応：Knob, ADSRCanvas
+
+### キーボード
+- Keyboard ... キー入力
+- オクターブの切り替え
+- スケール
+
+### エフェクト
+- delay
+- ping pong delay
+- chorus
+- reverb
+- distortion
+- auto pan
+- eq eight
+- analyzer
+- utility
+
+### シーケンサー
+### サンプラー
+
 
 ## Getting Started
 

@@ -130,13 +130,10 @@ export const ADSRCanvas = ({
           // マウスホバーしているか
           if (Math.sqrt((t1x - mx) ** 2 + (t1y - my) ** 2) <= buttonRadius) {
             moveFlag = "a";
-            document.body.classList.add("noselect");
           } else if (Math.sqrt((t2x - mx) ** 2 + (t2y - my) ** 2) <= buttonRadius) {
             moveFlag = "d";
-            document.body.classList.add("noselect");
           } else if (Math.sqrt((t4x - mx) ** 2 + (t4y - my) ** 2) <= buttonRadius) {
             moveFlag = "r";
-            document.body.classList.add("noselect");
           }
         }, false);
 
@@ -155,7 +152,7 @@ export const ADSRCanvas = ({
           }
 
           moveFlag = ""
-          document.body.classList.remove("noselect");
+          // document.body.classList.remove("noselect");
         }, false);
 
         window.addEventListener('mousemove', (event) => {

@@ -21,7 +21,7 @@ import { QuestionIcon } from '@chakra-ui/icons';
 
 import { theme } from '@/libs/theme'
 import { clamp, noteNumberToFrequency } from '@/libs/utils'
-import { BasicOscillatorType } from '@/providers/synth';
+import { BasicOscillatorType, PropertyMatrix } from '@/providers/synth';
 
 import { ButtonOnce } from '@/components/synth/ButtonOnce';
 import { GainSlider } from '@/components/synth/osc/gainSlider';
@@ -32,26 +32,17 @@ import { Amp } from '@/components/synth/amp/';
 import { FilterMenu } from '@/components/synth/filter/filterMenu';
 import { FilterCanvas } from '@/components/synth/filter/filterCanvas';
 import { FilterKnobsGroup } from './filter/filterKnobsGroup';
-import { Keyboard } from '@/components/synth/keyboard';
 import { SubOsc } from '@/components/synth/subOsc';
+import { Matrix } from '@/components/synth/matrix';
+import { Keyboard } from '@/components/synth/keyboard';
 
 
-// 参考
-// Amp 実装 ... https://curtaincall.weblike.jp/portfolio-web-sounder/webaudioapi-basic/envelope-generator
-// その他フィルターなど ... https://www.g200kg.com/jp/docs/webaudio/oscillator.html
-// https://g200kg.github.io/web-audio-api-ja/#biquadfilternode
-// https://webaudioapi.com/samples/frequency-response/
-
-
-/*
-TODO:
-- canvas (ADSR) の実装変更 ... eventListener を React Styleに
-- canvas (ADSR) の実装変更 ... リファクタリング
-- Env 実装 (ADSR) をコピー
-- Osc2 実装
-
-*/
-
+interface AutomatableParam {
+  value: number;
+  MAX: number;
+  MIN: number;
+  unit: string;
+}
 
 const Synth = () => {
   // web audio api
@@ -88,9 +79,6 @@ const Synth = () => {
   const [filter1Freq, setFilter1Freq] = useState<number>(8000); // 0 ~ 20.5k
   const [filter1Q, setFilter1Q] = useState<number>(5); // 0 ~ 50
   const [filter1Gain, setFilter1Gain] = useState<number>(0); // 0 ~ 50
-  const [frequencyHz, setFrequencyHz] = useState<Float32Array>(new Float32Array(300));
-  const [magResponse, setMagResponse] = useState<Float32Array>(new Float32Array(300));
-  const [phaseResponse, setPhaseResponse] = useState<Float32Array>(new Float32Array(300));
 
   // filter2
   const [filter2, setFilter2] = useState<boolean>(false);
@@ -117,8 +105,11 @@ const Synth = () => {
   const [env2Sustain, setEnv2Sustain] = useState(70); // sustain (%)
   const [env2Release, setEnv2Release] = useState(300); // release (ms)
 
+  // matrix
+  const [propertyMatrix, setPropertyMatrix] = useState<PropertyMatrix>({"filter1 Freq": {"ENV1": 34}, "filter1 Gain": {}, "filter1 Q": {}});
+
   const initAudio = () => {
-    const _audioCtx = new AudioContext();
+    const _audioCtx = new AudioContext({sampleRate: 44100});
 
     setAudioCtx(_audioCtx);
     setOscillatorNode(new OscillatorNode(_audioCtx));
@@ -141,39 +132,6 @@ const Synth = () => {
     //     }
     //   }
     // }, 100)
-
-    // setInterval(() => {
-    //   var noctaves = 11;
-    //   const w = 300;
-
-    //   let _frequencyHz = new Float32Array(w);
-    //   let _magResponse = new Float32Array(w);
-    //   let _phaseResponse = new Float32Array(w);
-    //   var nyquist = 0.5 * _audioCtx.sampleRate;
-    //   // First get response.
-    //   for (var i = 0; i < w; ++i) {
-    //     var f = i / w;
-    //     // Convert to log frequency scale (octaves).
-    //     f = nyquist * Math.pow(2.0, noctaves * (f - 1.0));
-    //     _frequencyHz[i] = f;
-    //   }
-
-    //   _filter1.getFrequencyResponse(_frequencyHz, _magResponse, _phaseResponse);
-
-    //   const eq = () => {
-    //     for (let i = 0; i < w; i++) {
-    //       if (magResponse[i] === _magResponse[i]) return false;
-    //     }
-    //     return true;
-    //   }
-    //   console.log(magResponse[0]);
-    //   console.log(_magResponse[0]);
-    //   console.log(magResponse[0] === _magResponse[0]);
-
-    //   setFrequencyHz((_frequencyHz) => _frequencyHz);
-    //   setMagResponse((_magResponse) => _magResponse);
-    //   setPhaseResponse((_phaseResponse) => _phaseResponse);
-    // }, 1000)
 
     console.log("done: init audio");
   }
@@ -223,20 +181,6 @@ const Synth = () => {
     if (subOsc) {
       _sub.connect(subOscillatorGainNode).connect(ampNode);
     }
-
-    // if (filter1 && filter2) {
-    //   ampNode.connect(filter1Node)
-    //          .connect(filter2Node)
-    //          .connect(compressorNode);
-    // } else if (filter1) {
-    //   ampNode.connect(filter1Node)
-    //          .connect(compressorNode);
-    // } else if (filter2) {
-    //   ampNode.connect(filter2Node)
-    //          .connect(compressorNode);
-    // } else {
-    //   ampNode.connect(compressorNode);
-    // }
 
     ampNode.connect(filter1Node)
            .connect(filter2Node)
@@ -304,9 +248,8 @@ const Synth = () => {
       </CardHeader>
 
       <CardBody pt={0}>
-        {/* overflowX="scroll" overflowY="hidden" */}
         <Box overflowX="auto" overflowY="hidden">
-          <HStack spacing="10px" align="start" height="300px">
+          <HStack spacing="10px" align="start" height="300px" minWidth="min-content">
             {/* Sub */}
             <Box bg={theme.colors.brand[700]} color="white" p={2} borderRadius="8px" minWidth="100px" height="100%">
               <SubOsc
@@ -478,6 +421,18 @@ const Synth = () => {
                   </TabPanel>
                 </TabPanels>
               </Tabs>
+            </Box>
+
+            {/* Matrix */}
+            <Box bg={theme.colors.brand[900]} color="white" p={2} borderRadius="8px" height="100%">
+              <Heading size='xs'>
+                Matrix{" "}
+                <Tooltip label='マトリックス：フィルターなどをエンベロープで動かすためのルーティングを設定します'>
+                  <QuestionIcon color={theme.colors.brand[700]} />
+                </Tooltip>
+              </Heading>
+
+              <Matrix propertyMatrix={propertyMatrix} setPropertyMatrix={setPropertyMatrix} />
             </Box>
           </HStack>
         </Box>
