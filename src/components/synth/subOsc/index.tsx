@@ -1,8 +1,10 @@
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Box,
   Text,
   Button,
   ButtonGroup,
+  Flex,
   Menu,
   MenuButton,
   MenuList,
@@ -11,42 +13,44 @@ import {
   HStack,
   NumberInput,
   NumberInputField,
-} from '@chakra-ui/react'
-import { ChevronDownIcon } from '@chakra-ui/icons';
+  Spacer
+} from '@chakra-ui/react';
 
-import { theme } from '@/libs/theme'
-import { capitalizeFirstLetter, clamp } from '@/libs/utils'
-
-import { BasicOscillatorType, isBasicOscillatorType } from '@/providers/synth';
 import { Knob } from '@/components/synth/knob';
+import { theme } from '@/libs/theme';
+import { capitalizeFirstLetter, clamp } from '@/libs/utils';
+import { useSynth } from '@/providers/synth';
+import { BasicOscillatorType, isBasicOscillatorType } from '@/types/synth';
 
-interface Props {
-  subOsc: boolean;
-  setSubOsc: (v: boolean) => void;
-  subOscGain: number;
-  setSubOscGain: (v: number) => void;
-  subOscType: "sync" | BasicOscillatorType;
-  setSubOscType: (v: "sync" | BasicOscillatorType) => void;
-  subOscOctave: number;
-  setSubOscOctave: (v: number) => void;
-  subOscTranspose: number;
-  setSubOscTranspose: (v: number) => void;
-}
+// interface Props {
+//   subOsc: boolean;
+//   setSubOsc: (v: boolean) => void;
+//   subOscGain: number;
+//   setSubOscGain: (v: number) => void;
+//   subOscType: "sync" | BasicOscillatorType;
+//   setSubOscType: (v: "sync" | BasicOscillatorType) => void;
+//   subOscOctave: number;
+//   setSubOscOctave: (v: number) => void;
+//   subOscTranspose: number;
+//   setSubOscTranspose: (v: number) => void;
+// }
 
-export const SubOsc = ({
-  subOsc,
-  setSubOsc,
-  subOscGain,
-  setSubOscGain,
-  subOscType,
-  setSubOscType,
-  subOscOctave,
-  setSubOscOctave,
-  subOscTranspose,
-  setSubOscTranspose,
-}: Props)  => {
+export const SubOsc = ()  => {
+  const {
+    subOsc,
+    setSubOsc,
+    subOscGain,
+    setSubOscGain,
+    subOscType,
+    setSubOscType,
+    subOscOctave,
+    setSubOscOctave,
+    subOscTranspose,
+    setSubOscTranspose,
+  } = useSynth();
+
   return (
-    <>
+    <Flex direction="column" h="full">
       <Button
         variant="outline"
         w="full"
@@ -61,10 +65,14 @@ export const SubOsc = ({
       >
         Sub
       </Button>
-      <Text pt={1} pl={2}>Gain</Text>
+
+      {/* <Spacer /> */}
+
+      <Text pl={1}>Gain</Text>
       <Box position="relative" pl={1}>
         <Knob
           value={subOscGain}
+          setValue={setSubOscGain}
           onChange={(v) => setSubOscGain(clamp(subOscGain + v, 0, 100))}
           min={0}
           max={100}
@@ -73,7 +81,9 @@ export const SubOsc = ({
         <Text position="absolute" top="22px" left="calc(1rem + 18px)">{subOscGain} %</Text>
       </Box>
 
-      <Text pt={2}>Tone</Text>
+      <Spacer />
+
+      <Text>Tone</Text>
       <Menu>
         <MenuButton
           as={Button}
@@ -110,7 +120,9 @@ export const SubOsc = ({
         </MenuList>
       </Menu>
 
-      <Text pt={2}>Octave</Text>
+      <Spacer />
+
+      <Text>Octave</Text>
       <ButtonGroup size='xs' variant='outline' spacing="1">
         {
           [0, -1, -2].map((v) =>
@@ -121,13 +133,15 @@ export const SubOsc = ({
               borderColor={theme.colors.brand[800]}
               _focus={{bg: subOsc ? theme.colors.brand[400] : theme.colors.brand[600]}}
               _hover={{bg: subOsc ? theme.colors.brand[700] : theme.colors.brand[600]}}
-              onClick={(e) => {setSubOscOctave(v); return e}}
+              onClick={(e) => {setSubOscOctave(v); return e;}}
             >{v}</Button>
           )
         }
       </ButtonGroup>
 
-      <Text pt={2}>Transpose</Text>
+      <Spacer />
+
+      <Text>Transpose</Text>
       <HStack spacing="0.2rem" color="white">
         <NumberInput
           size="xs"
@@ -149,6 +163,6 @@ export const SubOsc = ({
         </NumberInput>
         <Text fontSize="14px">st</Text>
       </HStack>
-    </>
-  )
-}
+    </Flex>
+  );
+};

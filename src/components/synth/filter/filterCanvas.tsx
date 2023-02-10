@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+
 import { theme } from '@/libs/theme';
 
 interface Props {
@@ -82,13 +83,13 @@ export const FilterCanvas = ({
       }
     }
     context.stroke();
-  }
+  };
 
   useEffect(() => {
-    if (!audioCtx || !filter1Node || !filter2Node) { return }
+    if (!audioCtx || !filter1Node || !filter2Node) { return; }
     if (canvasRef.current) {
       const canvas = canvasRef.current;
-      canvas.oncontextmenu = function () { return false; }
+      canvas.oncontextmenu = function () { return false; };
       const context = canvas.getContext('2d');
       if (context) {
         const w = canvas.width;
@@ -116,8 +117,8 @@ export const FilterCanvas = ({
     audioCtx,
     filter1Node, filter1, filter1Type, filter1Freq, filter1Q, filter1Gain,
     filter2Node, filter2, filter2Type, filter2Freq, filter2Q, filter2Gain,
-  ])
+  ]);
 
-  return <canvas width="256px" height="100px" ref={canvasRef} style={{ "background": theme.colors.brand[900] }} />
+  return <canvas width="256px" height="100px" ref={canvasRef} style={{ "background": theme.colors.brand[900] }} />;
   // return <canvas width="300px" height="120px" ref={canvasRef} style={{ "background": theme.colors.brand[900] }} />
-}
+};

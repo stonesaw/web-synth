@@ -1,12 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+
 import { theme } from '@/libs/theme';
-import { clamp, radian } from '@/libs/utils';
+import { clamp, radian, frequencyToPercent, percentToFrequency } from '@/libs/utils';
 
 interface Props {
   value: number;
+  setValue: (value: number) => void;
   onChange: (frequency: number) => void;
   min: number;
   max: number;
+  defaultValue?: number;
   size?: number;
   circleFillColor?: string;
   circleEmptyColor?: string;
@@ -16,9 +19,11 @@ interface Props {
 
 export const FrequencyKnob = ({
   value,
+  setValue,
   onChange,
   min,
   max,
+  defaultValue,
   size,
   circleFillColor,
   circleEmptyColor,
@@ -29,27 +34,20 @@ export const FrequencyKnob = ({
   // const [mouseDownFlag, setMouseDownFlag] = useState(false);
   // const [mouseOffsetY, setMouseOffsetY] = useState(0);
 
-  var mouseDownFlag = false;
-  var my = 0;
-  var mouseOffsetY = 0;
+  let mouseDownFlag = false;
+  let my = 0;
+  let mouseOffsetY = 0;
+
+  const setDefaultValue = () => {
+    console.log("on db click")
+    if (defaultValue) {
+      setValue(defaultValue);
+    }
+  }
 
   // memo
-  // y = nyquist * 2.0 ** (11 * (x - 1) // noctaves
+  // y = nyquist * 2.0 ** (11 * (x - 1) // octaves
   // x = log2(y / nyquist) / 11 + 1
-
-  const percentToFrequency = (value: number): number => {
-    const nyquist = 44100 / 2; // audioCtx.sampleRate * 0.5;
-    const noctaves = Math.log(nyquist / 10.0) / Math.LN2;
-    const v2 = Math.pow(2.0, noctaves * (clamp(value) - 1.0));
-    return Math.round(v2 * nyquist);
-  }
-
-  const frequencyToPercent = (frequency: number): number => {
-    const nyquist = 44100 / 2; // audioCtx.sampleRate * 0.5;
-    const noctaves = Math.log(nyquist / 10.0) / Math.LN2;
-    const percent = clamp(Math.log2(frequency / nyquist) / noctaves + 1);
-    return Math.round(percent * 100) / 100;
-  }
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -71,7 +69,7 @@ export const FrequencyKnob = ({
         // setValue(clamp(value + Math.floor((mouseOffsetY - my) / 2), min, max))
         // console.log(my - mouseOffsetY);
       }
-    })
+    });
 
     canvas.addEventListener('mousedown', () => {
       if (!mouseDownFlag) {
@@ -81,20 +79,20 @@ export const FrequencyKnob = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
         mouseDownFlag = true;
       }
-    })
+    });
 
     window.addEventListener('mouseup', () => {
       mouseDownFlag = false;
       // document.body.classList.remove("noselect");
-    })
-  })
+    });
+  });
 
   useEffect(() => {
     const _size = (size || 40);
 
     if (canvasRef.current) {
       const canvas = canvasRef.current;
-      canvas.oncontextmenu = function () {return false;}
+      canvas.oncontextmenu = function () {return false;};
       const context = canvas.getContext('2d');
       if (context) {
           const w = canvas.width;
@@ -137,12 +135,13 @@ export const FrequencyKnob = ({
           context.stroke();
       }
     }
-  }, [value, barColor, circleEmptyColor, circleFillColor, isDisabled, max, min, size])
+  }, [value, barColor, circleEmptyColor, circleFillColor, isDisabled, max, min, size]);
 
   return <canvas
+          ref={canvasRef}
           width={String(size || 40) + "px"}
           height={String(size || 40) + "px"}
-          ref={canvasRef}
+          onDoubleClick={() => setDefaultValue()}
           style={{"cursor": "pointer"}}
-         />
-}
+         />;
+};

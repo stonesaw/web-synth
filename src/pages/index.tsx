@@ -1,8 +1,11 @@
-import type { NextPage } from 'next'
-import Head from 'next/head'
-import { Link } from '@chakra-ui/react'
-import { ExternalLinkIcon } from '@chakra-ui/icons'
-import Synth from '@/components/synth'
+import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { Link } from '@chakra-ui/react';
+import Head from 'next/head';
+
+import type { NextPage } from 'next';
+
+import Synth from '@/components/synth';
+import { SynthProvider } from "@/providers/synth"
 
 const Home: NextPage = () => {
   return (
@@ -15,7 +18,9 @@ const Home: NextPage = () => {
 
       <main>
         {/* <Heading>第1回 ブラウザでシンセサイザーを作る会</Heading> */}
-        <Synth />
+        <SynthProvider>
+          <Synth />
+        </SynthProvider>
       </main>
 
       <footer>
@@ -24,7 +29,7 @@ const Home: NextPage = () => {
         </Link>
       </footer>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

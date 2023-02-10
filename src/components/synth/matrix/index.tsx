@@ -1,40 +1,36 @@
 import {
   Box,
   Text,
-  Button,
-  ButtonGroup,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuOptionGroup,
-  MenuItemOption,
   HStack,
+  VStack,
+  Button,
   NumberInput,
   NumberInputField,
-  Grid,
-  GridItem,
-  VStack,
-} from '@chakra-ui/react'
+} from '@chakra-ui/react';
 
-import { theme } from '@/libs/theme'
-import { capitalizeFirstLetter, clamp } from '@/libs/utils'
-import { PropertyMatrix, modulations, modulationsType } from '@/providers/synth'
+
+import { theme } from '@/libs/theme';
+import { useSynth } from '@/providers/synth';
+import { PropertyMatrix, modulations, modulationsType } from '@/types/synth';
 
 interface Props {
-  propertyMatrix: PropertyMatrix;
-  setPropertyMatrix: (v: PropertyMatrix) => void;
+  setAmpTabIndex: (v: number) => void;
 }
 
 export const Matrix = ({
-  propertyMatrix,
-  setPropertyMatrix
-}: Props)  => {
+  setAmpTabIndex
+}): Props  => {
+  const {
+    propertyMatrix,
+    setPropertyMatrix
+  } = useSynth();
+
   return (
-    <HStack spacing={2} height="calc(100% - 17.5px)" alignItems="flex-start">
-      {/* Matrix keys */}
+    <HStack height="100%" spacing={2} alignItems="flex-start" overflowY="scroll" pr={1}>
+      {/* Matrix key - assignable value names */}
       <VStack spacing={1}>
         <Box
-          w='100px'
+          w='110px'
           h='8'
           pl={1}
         ></Box>
@@ -42,9 +38,11 @@ export const Matrix = ({
           Object.keys(propertyMatrix).map((v, i) =>
           <Box
             key={i}
-            w='100px'
+            w='110px'
             h='6'
             pl={1}
+            color={theme.colors.brand[600]}
+            whiteSpace="nowrap"
           >
             <Text>{v}</Text>
           </Box>
@@ -56,37 +54,54 @@ export const Matrix = ({
         <HStack spacing={1}>
           {
             modulations.map((v, i) =>
-              <Box
+              <Button
                 key={i}
                 w='70px'
                 h='8'
-                // bg={theme.colors.brand[800]}
                 borderBottom="2px"
                 borderColor={i < 3 ? theme.colors.brand[500] : theme.colors.brand[400]}
                 textAlign="center"
+                bg="#0000"
+                borderRadius="0px"
+                onClick={(_e) => setAmpTabIndex(i)}
+                _hover={{bg: "#0000"}}
+                _active={{bg: "#0000"}}
+                fontWeight="normal"
               >
                 <Text>{v}</Text>
-              </Box>
+              </Button>
             )
           }
         </HStack>
 
         {
-          Object.values(propertyMatrix).map((mods, i) =>
-          <HStack spacing={1} key={i}>
+          Object.keys(propertyMatrix).map((name) =>
+          <HStack spacing={1} key={name}>
             {
               modulations.map((mod: modulationsType, i) =>
-                <Box
+                <NumberInput
                   key={i}
-                  w='70px'
-                  h='6'
-                  bg={theme.colors.brand[800]}
-                  // borderBottom="2px"
-                  // borderColor={i < 3 ? theme.colors.brand[500] : theme.colors.brand[400]}
-                  textAlign="center"
+                  allowMouseWheel
+                  variant="flushed"
+                  value={propertyMatrix[name][mod]}
+                  min={-100}
+                  max={100}
+                  onChange={(v) => {
+                    console.log(i, name, Number(v));
+                    setPropertyMatrix(
+                      {...propertyMatrix, [name]: {...propertyMatrix[name], [mod]: Number(v)}}
+                    )
+                  }}
                 >
-                  <Text>{mods[mod]}</Text>
-                </Box>
+                  <NumberInputField
+                    w="70px"
+                    h="6"
+                    p={1}
+                    color="white"
+                    bg={theme.colors.brand[800]}
+                    textAlign="center"
+                  />
+                </NumberInput>
               )
             }
           </HStack>
@@ -95,5 +110,5 @@ export const Matrix = ({
       </VStack>
 
     </HStack>
-  )
-}
+  );
+};

@@ -1,22 +1,16 @@
-import { useState } from 'react';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
-  Text,
-  Box,
   HStack,
-  Divider,
-  Flex,
   Button,
   Menu,
   MenuButton,
   MenuList,
   MenuOptionGroup,
   MenuItemOption,
-  Switch,
-} from '@chakra-ui/react'
-import { ChevronDownIcon } from '@chakra-ui/icons';
+} from '@chakra-ui/react';
 
 import { theme } from '@/libs/theme';
-import { isBiquadFilterType } from '@/providers/synth';
+import { isBiquadFilterType } from '@/types/synth';
 
 interface Props {
   filter: boolean,
@@ -84,5 +78,5 @@ export const FilterMenuMenu = ({
         </MenuList>
       </Menu>
     </HStack>
-  )
-}
+  );
+};

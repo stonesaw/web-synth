@@ -1,23 +1,12 @@
-import { useState } from 'react';
 import {
-  Text,
   Box,
-  HStack,
   Divider,
   Flex,
-  Button,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuOptionGroup,
-  MenuItemOption,
-} from '@chakra-ui/react'
-import { ChevronDownIcon } from '@chakra-ui/icons';
+} from '@chakra-ui/react';
+
+import { FilterMenuMenu } from './filterMenuMenu';
 
 import { theme } from '@/libs/theme';
-import { clamp } from '@/libs/utils';
-import { Knob } from '@/components/synth/knob';
-import { FilterMenuMenu } from './filterMenuMenu';
 
 interface Props {
   filter1: boolean,
@@ -41,8 +30,8 @@ export const FilterMenu = ({
   setFilter2Type,
 }: Props) => {
   return (
-    <Box width="100%" height="34.4px" bg={theme.colors.brand[900]} borderTopRadius="8px">
-      <Flex alignSelf="stretch" height="100%">
+    <Box w="full" height="34.4px" bg={theme.colors.brand[900]} borderTopRadius="8px">
+      <Flex alignSelf="stretch" h="full">
         <FilterMenuMenu
           filter={filter1}
           setFilter={setFilter1}
@@ -60,5 +49,5 @@ export const FilterMenu = ({
         />
       </Flex>
     </Box>
-  )
-}
+  );
+};

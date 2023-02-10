@@ -1,4 +1,3 @@
-import { theme } from '@/libs/theme';
 import {
   Text,
   Box,
@@ -9,7 +8,10 @@ import {
   NumberInput,
   NumberInputField,
   HStack,
-} from '@chakra-ui/react'
+  Flex,
+} from '@chakra-ui/react';
+
+import { theme } from '@/libs/theme';
 
 interface Props {
   gain: number,
@@ -20,16 +22,16 @@ export const GainSlider = ({
   gain,
   setGain
 }: Props) => {
-  const handleChange = (value: number) => setGain(value)
+  const handleChange = (value: number) => setGain(value);
   // const MAX = 6;
   // const MIN = -40;
   const MAX = 100;
   const MIN = 0;
 
   return (
-    <Box py={2} pl={1} textAlign="center" height="100%">
+    <Flex direction="column" pt={2} textAlign="center" h="full">
       <Text w="80px" m="0">Gain</Text>
-      <Box height="70%" py={4}>
+      <Box h="full" p={4}>
         <Slider
           aria-label='gain-slider'
           focusThumbOnChange={false}
@@ -62,8 +64,8 @@ export const GainSlider = ({
         </NumberInput>
         <Text>%</Text>
       </HStack>
-    </Box>
-  )
-}
+    </Flex>
+  );
+};
 
-export default GainSlider
+export default GainSlider;

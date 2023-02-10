@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+
 import { theme } from '@/libs/theme';
-import { ATTACK_MAX_MS, ATTACK_MIN_MS } from '@/providers/synth'
 import { clamp } from '@/libs/utils';
+import { ATTACK_MAX_MS, ATTACK_MIN_MS } from '@/types/synth';
 
 interface Props {
   attack: number,
@@ -25,7 +26,7 @@ export const ADSRCanvas = ({
   setRelease
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [dragFlag, setDragFlag, ] = useState("");
+  // const [dragFlag, setDragFlag, ] = useState("");
 
   const px = 10;
   const py = 12;
@@ -36,31 +37,31 @@ export const ADSRCanvas = ({
       attackPercentage <= 0.5 ?
       ATTACK_MIN_MS + (1000 - ATTACK_MIN_MS) * attackPercentage * 2 :
       1000 + (ATTACK_MAX_MS - 1000) * (attackPercentage - 0.5) * 2
-    )
-  }
+    );
+  };
 
   const toAttackPercentage = (attackMs: number) => {
     return (
       attackMs <= 1000 ?
       (attackMs - ATTACK_MIN_MS) / (1000 - ATTACK_MIN_MS) * 0.5 :
       0.5 + (attackMs - 1000) / (ATTACK_MAX_MS - 1000) / 2
-    )
-  }
+    );
+  };
 
   const updateCanvas = (canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, a: number, d: number, s: number, r: number) => {
     const containerW = canvas.width  - px * 2;
     const containerY = canvas.height - py * 2;
 
-    let t0x = px;
-    let t0y = py + containerY;
-    let t1x = px + containerW * (a / 4.0);
-    let t1y = py;
-    let t2x = px + containerW * (0.25 + d / 4.0);
-    let t2y = py + containerY * (1 - s);
-    let t3x = px + containerW * 0.75;
-    let t3y = t2y;
-    let t4x = px + containerW * (0.75 + r / 4.0);
-    let t4y = py + containerY;
+    const t0x = px;
+    const t0y = py + containerY;
+    const t1x = px + containerW * (a / 4.0);
+    const t1y = py;
+    const t2x = px + containerW * (0.25 + d / 4.0);
+    const t2y = py + containerY * (1 - s);
+    const t3x = px + containerW * 0.75;
+    const t3y = t2y;
+    const t4x = px + containerW * (0.75 + r / 4.0);
+    const t4y = py + containerY;
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -92,13 +93,13 @@ export const ADSRCanvas = ({
     context.beginPath();
     context.arc(t4x, t4y, buttonRadius, 0, Math.PI * 2, true);
     context.fill();
-  }
+  };
 
   // canvas
   useEffect(() => {
     if (canvasRef.current) {
       const canvas = canvasRef.current;
-      canvas.oncontextmenu = function () {return false;}
+      canvas.oncontextmenu = function () {return false;};
       const context = canvas.getContext('2d');
       if (context) {
         const containerW = canvas.width  - px * 2;
@@ -113,16 +114,16 @@ export const ADSRCanvas = ({
         let s = sustain / 100; // 0.0 ~ 1.0
         let r = toAttackPercentage(release); // 0.0 ~ 1.0
 
-        let t0x = px;
-        let t0y = py + containerY;
+        const _t0x = px;
+        const _t0y = py + containerY;
         let t1x = px + containerW * (a / 4.0);
-        let t1y = py;
+        const t1y = py;
         let t2x = px + containerW * (0.25 + d / 4.0);
         let t2y = py + containerY * (1 - s);
-        let t3x = px + containerW * 0.75;
-        let t3y = t2y;
+        const _t3x = px + containerW * 0.75;
+        const __t3y = t2y;
         let t4x = px + containerW * (0.75 + r / 4.0);
-        let t4y = py + containerY;
+        const t4y = py + containerY;
 
         let moveFlag = "";
 
@@ -151,7 +152,7 @@ export const ADSRCanvas = ({
             setRelease(Math.floor(toAttackMs(_r)));
           }
 
-          moveFlag = ""
+          moveFlag = "";
           // document.body.classList.remove("noselect");
         }, false);
 
@@ -163,7 +164,7 @@ export const ADSRCanvas = ({
           t1x = px + containerW * (a / 4.0);
           t2x = px + containerW * (0.25 + d / 4.0);
           t2y = py + containerY * (1 - s);
-          t4x = px + containerW * (0.75 + r / 4.0)
+          t4x = px + containerW * (0.75 + r / 4.0);
 
           // pointer style
           if (moveFlag != "" ||
@@ -195,7 +196,7 @@ export const ADSRCanvas = ({
         updateCanvas(canvas, context, a, d, s, r);
       }
     }
-  }, [attack, setAttack, decay, setDecay, sustain, setSustain, release, setRelease])
+  }, [attack, setAttack, decay, setDecay, sustain, setSustain, release, setRelease]);
 
-  return (<canvas width="340px" height="160px" ref={canvasRef} />)
-}
+  return (<canvas width="340px" height="160px" ref={canvasRef} />);
+};

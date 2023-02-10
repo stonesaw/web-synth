@@ -1,22 +1,13 @@
-import { theme } from '@/libs/theme';
 import {
   Text,
   Box,
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
-  NumberInput,
-  NumberInputField,
-  HStack,
-  Divider,
   Flex
-} from '@chakra-ui/react'
-import { useState } from 'react';
-import { Knob } from '@/components/synth/knob';
+} from '@chakra-ui/react';
+
 import { FrequencyKnob } from '@/components/synth/frequencyKnob';
+import { Knob } from '@/components/synth/knob';
 import { clamp } from '@/libs/utils';
-import { getQRange, getGainRange, filterQGainUsedFlags } from '@/providers/synth';
+import { filterQGainUsedFlags, FILTER_FREQ_MIN, FILTER_FREQ_MAX, DEFAULT_Q_MAX, DEFAULT_Q_MIN, DEFAULT_GAIN_MAX, DEFAULT_GAIN_MIN } from '@/types/synth';
 
 interface Props {
   filter: boolean,
@@ -39,27 +30,44 @@ export const FilterKnobs = ({
   filterGain,
   setFilterGain
 }: Props) => {
-  const FREQ_MAX = 20500;
-  const FREQ_MIN = 10;
-
   const displayFreq = (freq: number) => {
     if (freq < 1000) {
       return String(freq) + "Hz";
     } else {
       return String(freq / 1000) + "kHz";
     }
-  }
+  };
+
+  const getQRange = (filterType: BiquadFilterType, minmax: "MIN" | "MAX") => {
+    const qRange = filterQGainUsedFlags[filterType]["Q_RANGE"];
+    if (qRange) {
+      return qRange[minmax];
+    } else {
+      return (minmax == "MAX" ? DEFAULT_Q_MAX : DEFAULT_Q_MIN);
+    }
+  };
+
+  const getGainRange = (filterType: BiquadFilterType, minmax: "MIN" | "MAX") => {
+    const gainRange = filterQGainUsedFlags[filterType]["GAIN_RANGE"];
+    if (gainRange) {
+      return gainRange[minmax];
+    } else {
+      return (minmax == "MAX" ? DEFAULT_GAIN_MAX : DEFAULT_GAIN_MIN);
+    }
+  };
 
   return (
     <>
       <Text pb={1}>Frequency</Text>
-      <Box ml={4} width="min-content" position="relative">
+      <Box ml={4} w="min-content" position="relative">
         <FrequencyKnob
           value={filterFreq}
+          setValue={setFilterFreq}
           // https://webaudioapi.com/samples/frequency-response/
           onChange={(v) => setFilterFreq(v)}
-          min={FREQ_MIN}
-          max={FREQ_MAX}
+          min={FILTER_FREQ_MIN}
+          max={FILTER_FREQ_MAX}
+          defaultValue={8000}
           isDisabled={!filter}
         />
         <Text position="absolute" top="22px" left="26px" whiteSpace="nowrap">{displayFreq(filterFreq)}</Text>
@@ -70,12 +78,14 @@ export const FilterKnobs = ({
           filterQGainUsedFlags[filterType]["Q"] &&
           <Box flex={1}>
             <Text pt={3} pb={1}>Q</Text>
-            <Box mx="auto" width="min-content" position="relative">
+            <Box mx="auto" w="min-content" position="relative">
               <Knob
                 value={filterQ}
+                setValue={setFilterQ}
                 onChange={(v) => setFilterQ(clamp(filterQ + v, getQRange(filterType, "MIN"), getQRange(filterType, "MAX")))}
                 min={getQRange(filterType, "MIN")}
                 max={getQRange(filterType, "MAX")}
+                defaultValue={5}
                 size={30}
                 isDisabled={!filter}
               />
@@ -88,9 +98,10 @@ export const FilterKnobs = ({
           filterQGainUsedFlags[filterType]["GAIN"] &&
             <Box flex={1}>
               <Text pt={3} pb={1}>Gain</Text>
-              <Box mx="auto" width="min-content" position="relative">
+              <Box mx="auto" w="min-content" position="relative">
                 <Knob
                   value={filterGain}
+                  setValue={setFilterGain}
                   onChange={(v) => setFilterGain(clamp(filterGain + v, getGainRange(filterType, "MIN"), getGainRange(filterType, "MAX")))}
                   min={getGainRange(filterType, "MIN")}
                   max={getGainRange(filterType, "MAX")}
@@ -103,5 +114,5 @@ export const FilterKnobs = ({
         }
       </Flex>
     </>
-  )
-}
+  );
+};

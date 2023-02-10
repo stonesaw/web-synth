@@ -3,10 +3,12 @@ import {
   Divider,
   Flex,
   Spacer,
-} from '@chakra-ui/react'
-import { ATTACK_MAX_MS, ATTACK_MIN_MS } from '@/providers/synth'
-import { ADSRCanvas } from './adsrCanvas'
-import { AmpInput } from './ampInput'
+} from '@chakra-ui/react';
+
+import { ADSRCanvas } from './adsrCanvas';
+import { AmpInput } from './ampInput';
+
+import { ATTACK_MAX_MS, ATTACK_MIN_MS } from '@/types/synth';
 
 interface Props {
   attack: number,
@@ -30,7 +32,7 @@ export const Amp = ({
   setRelease
 }: Props) => {
   return (
-    <Box>
+    <Flex direction="column" h="full">
       <ADSRCanvas
         attack={attack}
         setAttack={setAttack}
@@ -41,8 +43,9 @@ export const Amp = ({
         release={release}
         setRelease={setRelease}
       />
-
+      <Spacer />
       <Divider />
+      <Spacer />
       <Box pt={3}>
         <Flex>
           <AmpInput
@@ -83,6 +86,6 @@ export const Amp = ({
           <Spacer />
         </Flex>
       </Box>
-    </Box>
-  )
-}
+    </Flex>
+  );
+};

@@ -4,7 +4,7 @@ import {
   NumberInput,
   NumberInputField,
   HStack,
-} from '@chakra-ui/react'
+} from '@chakra-ui/react';
 
 interface Props {
   name: string,
@@ -24,7 +24,7 @@ export const AmpInput = ({
   onChange
 }: Props) => {
   return (
-    <VStack align="start" spacing="0">
+    <VStack align="start" spacing={1}>
       <Text fontSize="14px" color="gray.300">{name}</Text>
       <HStack spacing="0.2rem" color="cyan.300">
         <NumberInput
@@ -43,5 +43,5 @@ export const AmpInput = ({
         <Text fontSize="14px">{unit}</Text>
       </HStack>
     </VStack>
-  )
-}
+  );
+};

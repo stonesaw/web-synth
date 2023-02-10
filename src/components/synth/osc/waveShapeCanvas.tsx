@@ -1,7 +1,7 @@
+import { useEffect, useRef } from 'react';
+
 import { theme } from '@/libs/theme';
-import { BasicOscillatorType } from '@/providers/synth';
-import { Box } from '@chakra-ui/react'
-import { useState, useEffect, useRef } from 'react';
+import { BasicOscillatorType } from '@/types/synth';
 
 
 interface Props {
@@ -14,7 +14,7 @@ export const WaveShapeCanvas = ({type}: Props) => {
   useEffect(() => {
     if (canvasRef.current) {
       const canvas = canvasRef.current;
-      canvas.oncontextmenu = function () {return false;}
+      canvas.oncontextmenu = function () {return false;};
       const context = canvas.getContext('2d');
       if (context) {
         const w = canvas.width;
@@ -60,11 +60,7 @@ export const WaveShapeCanvas = ({type}: Props) => {
         }
       }
     }
-  }, [type])
+  }, [type]);
 
-  return (
-    <Box pt={1}>
-      <canvas width="160px" height="160px" ref={canvasRef}></canvas>
-    </Box>
-  )
-}
+  return <canvas width="160px" height="160px" ref={canvasRef}></canvas>;
+};

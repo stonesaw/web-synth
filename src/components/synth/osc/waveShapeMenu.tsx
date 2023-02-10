@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Button,
   Menu,
@@ -6,22 +6,21 @@ import {
   MenuList,
   MenuOptionGroup,
   MenuItemOption,
-} from '@chakra-ui/react'
-import { ChevronDownIcon } from '@chakra-ui/icons';
+} from '@chakra-ui/react';
 
 import { theme } from '@/libs/theme';
-import { capitalizeFirstLetter } from '@/libs/utils'
-import { BasicOscillatorType, isBasicOscillatorType } from '@/providers/synth';
+import { capitalizeFirstLetter } from '@/libs/utils';
+import { useSynth } from '@/providers/synth';
+import { BasicOscillatorType, isBasicOscillatorType } from '@/types/synth';
 
 interface Props {
   type: BasicOscillatorType,
   setType: (type: BasicOscillatorType) => void
 }
 
-export const WaveShapeMenu = ({
-  type,
-  setType
-}: Props) => {
+export const WaveShapeMenu = () => {
+  const { type, setType } = useSynth();
+
   return (
     <Menu>
       <MenuButton
@@ -53,5 +52,5 @@ export const WaveShapeMenu = ({
         </MenuOptionGroup>
       </MenuList>
     </Menu>
-  )
-}
+  );
+};

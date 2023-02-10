@@ -1,13 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+
 import { theme } from '@/libs/theme';
-import { clamp, radian } from '@/libs/utils';
+import { radian } from '@/libs/utils';
 
 interface Props {
   value: number;
-  onChange?: (v: number) => void;
-  onChangePercent?: (v: number) => void;
+  setValue: (v: number) => void;
+  onChange: (v: number) => void;
   min: number;
   max: number;
+  defaultValue?: number;
   size?: number;
   circleFillColor?: string;
   circleEmptyColor?: string;
@@ -17,10 +19,11 @@ interface Props {
 
 export const Knob = ({
   value,
+  setValue,
   onChange,
-  onChangePercent,
   min,
   max,
+  defaultValue,
   size,
   circleFillColor,
   circleEmptyColor,
@@ -31,9 +34,16 @@ export const Knob = ({
   // const [mouseDownFlag, setMouseDownFlag] = useState(false);
   // const [mouseOffsetY, setMouseOffsetY] = useState(0);
 
-  var mouseDownFlag = false;
-  var my = 0;
-  var mouseOffsetY = 0;
+  let mouseDownFlag = false;
+  let my = 0;
+  let mouseOffsetY = 0;
+
+  const setDefaultValue = () => {
+    console.log("on db click")
+    if (defaultValue) {
+      setValue(defaultValue);
+    }
+  }
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -41,7 +51,6 @@ export const Knob = ({
 
     // TODO: やっぱり useState を使った方がいい
     // マウスが動くたびにロードされる
-    // console.log("load knob");
 
     window.addEventListener('mousemove', (event) => {
       const rect = canvas.getBoundingClientRect();
@@ -49,19 +58,12 @@ export const Knob = ({
       my = event.clientY - rect.top;
 
       if (mouseDownFlag) {
-        if (onChange != undefined) {
-          onChange(Math.floor((mouseOffsetY - my) / 2));
-        }
+        onChange(Math.floor((mouseOffsetY - my) / 2));
 
-        if (onChangePercent != undefined) {
-          const percent = (value - min) / (max - min);
-          const mp = (mouseOffsetY - my) / 100;
-          onChangePercent(clamp(percent + mp));
-        }
         // setValue(clamp(value + Math.floor((mouseOffsetY - my) / 2), min, max))
         // console.log(my - mouseOffsetY);
       }
-    })
+    });
 
     canvas.addEventListener('mousedown', () => {
       if (!mouseDownFlag) {
@@ -70,19 +72,19 @@ export const Knob = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
         mouseDownFlag = true;
       }
-    })
+    });
 
     window.addEventListener('mouseup', () => {
       mouseDownFlag = false;
-    })
-  })
+    });
+  }, [value]);
 
   useEffect(() => {
     const _size = (size || 40);
 
     if (canvasRef.current) {
       const canvas = canvasRef.current;
-      canvas.oncontextmenu = function () {return false;}
+      canvas.oncontextmenu = function () {return false;};
       const context = canvas.getContext('2d');
       if (context) {
           const w = canvas.width;
@@ -125,12 +127,13 @@ export const Knob = ({
           context.stroke();
       }
     }
-  }, [value, barColor, circleEmptyColor, circleFillColor, isDisabled, max, min, size])
+  }, [value, barColor, circleEmptyColor, circleFillColor, isDisabled, max, min, size]);
 
   return <canvas
+          ref={canvasRef}
           width={String(size || 40) + "px"}
           height={String(size || 40) + "px"}
-          ref={canvasRef}
+          onDoubleClick={() => setDefaultValue()}
           style={{"cursor": "pointer"}}
-         />
-}
+         />;
+};

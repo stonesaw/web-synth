@@ -3,8 +3,9 @@ import {
   NumberInput,
   NumberInputField,
   HStack,
-} from '@chakra-ui/react'
-import { theme } from '@/libs/theme'
+} from '@chakra-ui/react';
+
+import { theme } from '@/libs/theme';
 
 interface Props {
   semi: number,
@@ -65,5 +66,5 @@ export const OscParams = ({
         <Text fontSize="14px">ct</Text>
       </HStack>
     </HStack>
-  )
-}
+  );
+};
