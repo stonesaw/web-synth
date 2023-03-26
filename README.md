@@ -1,21 +1,40 @@
+<div align="center">
+
+![image](https://user-images.githubusercontent.com/50014309/227780102-d5dbc2aa-d5cf-4f31-b997-5dadb3bb1742.png)
+
 # web-synth
 
 Simple Synthesizer with Web Audio API
 
-[web-synth](https://web-synth-smoky.vercel.app/)
+[🎶 **Play here!**](https://web-synth-smoky.vercel.app/)
 
 
-## 参考
-Amp 実装
-- https://curtaincall.weblike.jp/portfolio-web-sounder/webaudioapi-basic/envelope-generator
+</div>
 
-その他フィルターなど
-- https://www.g200kg.com/jp/docs/webaudio/oscillator.html
-- https://g200kg.github.io/web-audio-api-ja/#biquadfilternode
-- https://webaudioapi.com/samples/frequency-response/
+---
 
 
-## TODO
+## ⚒ Setup
+
+1. Node.js のインストール
+2. yarn のインストール
+
+
+Node.js / yarn のバージョン
+```
+$ node -v
+v16.15.1
+
+$ yarn -v
+1.22.19
+```
+
+3. `yarn`
+4. `yarn dev`
+5. ブラウザで [localhost:3000](localhost:3000) を開く
+
+
+## 📈 TODO
 ### オシレーター
 - matrix
 - LFO
@@ -34,7 +53,6 @@ Amp 実装
     - https://www.cresco.co.jp/blog/entry/17620/
     - UI は とりあえず、Matrix の右に設置
     - 全体の内容が多くなってきたので、全体のUIの改修を行うかも
-
 - delay
 - ping pong delay
 - chorus
@@ -48,22 +66,11 @@ Amp 実装
 ### シーケンサー
 ### サンプラー
 
+## 💡 参考
+Amp 実装
+- https://curtaincall.weblike.jp/portfolio-web-sounder/webaudioapi-basic/envelope-generator
 
-## セットアップ
-
-1. Node.js のインストール
-2. yarn のインストール
-
-
-Node.js / yarn のバージョン
-```
-$ node -v
-v16.15.1
-
-$ yarn -v
-1.22.19
-```
-
-3. `yarn`
-4. `yarn dev`
-5. ブラウザで [localhost:3000](localhost:3000) を開く
+その他フィルターなど
+- https://www.g200kg.com/jp/docs/webaudio/oscillator.html
+- https://g200kg.github.io/web-audio-api-ja/#biquadfilternode
+- https://webaudioapi.com/samples/frequency-response/
