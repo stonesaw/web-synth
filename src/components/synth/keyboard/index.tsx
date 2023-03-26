@@ -17,7 +17,7 @@ import { useState } from 'react';
 
 import { theme } from '@/libs/theme';
 import { clamp, noteNumberToNoteName } from "@/libs/utils";
-import { KeyboardScales, KeyboardScale } from "@/types/synth"
+import { KeyboardScales, KeyboardScale, isKeyboardScale } from "@/types/synth"
 
 interface Props {
   startAmp: (pitch: number) => void,
@@ -68,8 +68,10 @@ export const Keyboard = ({
             <MenuOptionGroup
               defaultValue={keyboardScale}
               onChange={(value) => {
-                const t: KeyboardScale = String(value);
-                setKeyboardScale(t);
+                const v = String(value);
+                if (isKeyboardScale(v)) {
+                  setKeyboardScale(v);
+                }
               }}
             >
               {

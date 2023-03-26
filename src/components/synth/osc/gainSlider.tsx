@@ -12,17 +12,15 @@ import {
 } from '@chakra-ui/react';
 
 import { theme } from '@/libs/theme';
+import { useSynth } from '@/providers/synth';
 
-interface Props {
-  gain: number,
-  setGain: (gain: number) => void
-}
+export const GainSlider = () => {
+  const {
+    osc1Gain,
+    setOsc1Gain
+  } = useSynth();
 
-export const GainSlider = ({
-  gain,
-  setGain
-}: Props) => {
-  const handleChange = (value: number) => setGain(value);
+  const handleChange = (value: number) => setOsc1Gain(value);
   // const MAX = 6;
   // const MIN = -40;
   const MAX = 100;
@@ -38,7 +36,7 @@ export const GainSlider = ({
           orientation='vertical'
           max={MAX}
           min={MIN}
-          value={gain}
+          value={osc1Gain}
           onChange={(value) => handleChange(value)}
         >
           <SliderTrack bg="gray.600">
@@ -57,7 +55,7 @@ export const GainSlider = ({
           focusBorderColor={theme.colors.brand[400]}
           max={MAX}
           min={MIN}
-          value={gain}
+          value={osc1Gain}
           onChange={(value) => handleChange(Number(value))}
         >
           <NumberInputField p={1} w={10} textAlign="center"/>

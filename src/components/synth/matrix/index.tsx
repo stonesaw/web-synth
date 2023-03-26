@@ -8,18 +8,17 @@ import {
   NumberInputField,
 } from '@chakra-ui/react';
 
-
 import { theme } from '@/libs/theme';
 import { useSynth } from '@/providers/synth';
-import { PropertyMatrix, modulations, modulationsType } from '@/types/synth';
+import { modulations, modulationsType, AssignableParams, AssignableParamsType } from '@/types/synth';
 
 interface Props {
   setAmpTabIndex: (v: number) => void;
 }
 
 export const Matrix = ({
-  setAmpTabIndex
-}): Props  => {
+  setAmpTabIndex,
+}: Props)  => {
   const {
     propertyMatrix,
     setPropertyMatrix
@@ -63,7 +62,7 @@ export const Matrix = ({
                 textAlign="center"
                 bg="#0000"
                 borderRadius="0px"
-                onClick={(_e) => setAmpTabIndex(i)}
+                onClick={(_e) => setAmpTabIndex(Number(i))}
                 _hover={{bg: "#0000"}}
                 _active={{bg: "#0000"}}
                 fontWeight="normal"
@@ -75,12 +74,12 @@ export const Matrix = ({
         </HStack>
 
         {
-          Object.keys(propertyMatrix).map((name) =>
+          AssignableParams.map((name: AssignableParamsType, i) =>
           <HStack spacing={1} key={name}>
             {
-              modulations.map((mod: modulationsType, i) =>
+              modulations.map((mod: modulationsType, j) =>
                 <NumberInput
-                  key={i}
+                  key={j}
                   allowMouseWheel
                   variant="flushed"
                   value={propertyMatrix[name][mod]}

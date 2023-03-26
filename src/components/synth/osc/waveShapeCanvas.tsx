@@ -1,14 +1,11 @@
 import { useEffect, useRef } from 'react';
 
 import { theme } from '@/libs/theme';
-import { BasicOscillatorType } from '@/types/synth';
+import { useSynth } from '@/providers/synth';
 
+export const WaveShapeCanvas = () => {
+  const { osc1Type } = useSynth();
 
-interface Props {
-  type: BasicOscillatorType
-}
-
-export const WaveShapeCanvas = ({type}: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -25,27 +22,27 @@ export const WaveShapeCanvas = ({type}: Props) => {
         context.lineWidth = 2;
         context.strokeStyle = theme.colors.brand[400];
 
-        if (type == "sine") {
+        if (osc1Type == "sine") {
           context.beginPath();
           context.moveTo(0, h / 2);
           context.quadraticCurveTo(w * 0.25, 0, w / 2, h / 2);
           context.quadraticCurveTo(w * 0.75, h, w, h / 2);
           context.stroke();
-        } else if (type == "triangle") {
+        } else if (osc1Type == "triangle") {
           context.beginPath();
           context.moveTo(0, h / 2);
           context.lineTo(w * 0.25, h * 0.25);
           context.lineTo(w * 0.75, h * 0.75);
           context.lineTo(w, h / 2);
           context.stroke();
-        } else if (type == "sawtooth") {
+        } else if (osc1Type == "sawtooth") {
           context.beginPath();
           context.moveTo(0, h * 0.5);
           context.lineTo(w * 0.5, h * 0.25);
           context.lineTo(w * 0.5, h * 0.75);
           context.lineTo(w, h / 2);
           context.stroke();
-        } else if (type == "square") {
+        } else if (osc1Type == "square") {
           context.beginPath();
           context.moveTo(0, h * 0.25);
           context.lineTo(w * 0.5, h * 0.25);
@@ -60,7 +57,7 @@ export const WaveShapeCanvas = ({type}: Props) => {
         }
       }
     }
-  }, [type]);
+  }, [osc1Type]);
 
   return <canvas width="160px" height="160px" ref={canvasRef}></canvas>;
 };

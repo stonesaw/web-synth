@@ -1,38 +1,25 @@
 import { useEffect, useRef } from 'react';
 
 import { theme } from '@/libs/theme';
+import { useSynth } from '@/providers/synth';
 
-interface Props {
-  audioCtx: AudioContext | null;
-  filter1Node: BiquadFilterNode | null;
-  filter1: boolean;
-  filter1Type: BiquadFilterType;
-  filter1Freq: number;
-  filter1Gain: number;
-  filter1Q: number;
-  filter2Node: BiquadFilterNode | null;
-  filter2: boolean;
-  filter2Type: BiquadFilterType;
-  filter2Freq: number;
-  filter2Q: number;
-  filter2Gain: number;
-}
+export const FilterCanvas = () => {
+  const {
+    audioCtx,
+    filter1Node,
+    filter1,
+    filter1Type,
+    filter1Freq,
+    filter1Q,
+    filter1Gain,
+    filter2Node,
+    filter2,
+    filter2Type,
+    filter2Freq,
+    filter2Q,
+    filter2Gain,
+  } = useSynth();
 
-export const FilterCanvas = ({
-  audioCtx,
-  filter1Node,
-  filter1,
-  filter1Type,
-  filter1Freq,
-  filter1Q,
-  filter1Gain,
-  filter2Node,
-  filter2,
-  filter2Type,
-  filter2Freq,
-  filter2Q,
-  filter2Gain,
-}: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const MAX = 20500;
   const MIN = 0;

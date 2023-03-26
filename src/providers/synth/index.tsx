@@ -35,8 +35,8 @@ interface SynthContextProps {
   isStop: boolean;
   setIsStop: (isStop: boolean) => void;
   // osc1
-  type: BasicOscillatorType;
-  setType: (type: BasicOscillatorType) => void;
+  osc1Type: BasicOscillatorType;
+  setOsc1Type: (osc1Type: BasicOscillatorType) => void;
   osc1Gain: number;
   setOsc1Gain: (osc1Gain: number) => void;
   osc1Semi: number;
@@ -142,8 +142,8 @@ const SynthContext = createContext<SynthContextProps>({
   setIntervalCount: () => undefined,
   isStop: false,
   setIsStop: () => undefined,
-  type: "sine",
-  setType: () => undefined,
+  osc1Type: "sine",
+  setOsc1Type: () => undefined,
   osc1Gain: 0,
   setOsc1Gain: () => undefined,
   osc1Semi: 0,
@@ -244,7 +244,7 @@ export const SynthProvider = ({ children }: Props) => {
   const [isStop, setIsStop] = useState<boolean>(true);
 
   // osc1
-  const [type, setType] = useState<BasicOscillatorType>("sine");
+  const [osc1Type, setOsc1Type] = useState<BasicOscillatorType>("sine");
   const [osc1Gain, setOsc1Gain] = useState<number>(100); // TODO: とりあえず 0 ~ 100 %
   const [osc1Semi, setOsc1Semi] = useState<number>(0);
   const [osc1Detune, setOsc1Detune] = useState<number>(0);
@@ -355,11 +355,11 @@ export const SynthProvider = ({ children }: Props) => {
     const _sub = new OscillatorNode(audioCtx);
 
     // set parameter at state
-    _oscillator.type = type;
+    _oscillator.type = osc1Type;
     _oscillator.detune.value = osc1Detune;
     oscillatorGainNode.gain.value = clamp(osc1Gain / 100);
 
-    _sub.type = subOscType == "sync" ? type : subOscType;
+    _sub.type = subOscType == "sync" ? osc1Type : subOscType;
     subOscillatorGainNode.gain.value = clamp(subOscGain / 100);
 
     filter1Node.type = filter1 ? filter1Type : "allpass";
@@ -508,8 +508,8 @@ export const SynthProvider = ({ children }: Props) => {
         isStop,
         setIsStop,
         // osc1
-        type,
-        setType,
+        osc1Type,
+        setOsc1Type,
         osc1Gain,
         setOsc1Gain,
         osc1Semi,

@@ -7,28 +7,20 @@ import {
 import { FilterMenuMenu } from './filterMenuMenu';
 
 import { theme } from '@/libs/theme';
+import { useSynth } from '@/providers/synth';
 
-interface Props {
-  filter1: boolean,
-  setFilter1: (v: boolean) => void,
-  filter1Type: BiquadFilterType,
-  setFilter1Type: (v: BiquadFilterType) => void,
-  filter2: boolean,
-  setFilter2: (v: boolean) => void,
-  filter2Type: BiquadFilterType,
-  setFilter2Type: (v: BiquadFilterType) => void,
-}
+export const FilterMenu = () => {
+  const {
+    filter1,
+    setFilter1,
+    filter1Type,
+    setFilter1Type,
+    filter2,
+    setFilter2,
+    filter2Type,
+    setFilter2Type,
+  } = useSynth();
 
-export const FilterMenu = ({
-  filter1,
-  setFilter1,
-  filter1Type,
-  setFilter1Type,
-  filter2,
-  setFilter2,
-  filter2Type,
-  setFilter2Type,
-}: Props) => {
   return (
     <Box w="full" height="34.4px" bg={theme.colors.brand[900]} borderTopRadius="8px">
       <Flex alignSelf="stretch" h="full">

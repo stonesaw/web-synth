@@ -108,3 +108,13 @@ export type PropertyMatrix = {
 
 export const KeyboardScales = ["chromatic", "major", "minor", "major pentatonic", "minor pentatonic"] as const;
 export type KeyboardScale = typeof KeyboardScales[number];
+
+export const isKeyboardScale = (type: string): type is KeyboardScale => {
+  return (
+    type === "chromatic" ||
+    type === "major" ||
+    type === "minor" ||
+    type === "major pentatonic" ||
+    type === "minor pentatonic"
+  );
+};

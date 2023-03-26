@@ -11,15 +11,10 @@ import {
 import { theme } from '@/libs/theme';
 import { capitalizeFirstLetter } from '@/libs/utils';
 import { useSynth } from '@/providers/synth';
-import { BasicOscillatorType, isBasicOscillatorType } from '@/types/synth';
-
-interface Props {
-  type: BasicOscillatorType,
-  setType: (type: BasicOscillatorType) => void
-}
+import { isBasicOscillatorType } from '@/types/synth';
 
 export const WaveShapeMenu = () => {
-  const { type, setType } = useSynth();
+  const { osc1Type, setOsc1Type } = useSynth();
 
   return (
     <Menu>
@@ -35,14 +30,14 @@ export const WaveShapeMenu = () => {
         _active={{bg: theme.colors.brand[800]}}
         _expanded={{bg: theme.colors.brand[800]}}
       >
-        {capitalizeFirstLetter(type)}
+        {capitalizeFirstLetter(osc1Type)}
       </MenuButton>
       <MenuList bg={theme.colors.brand[900]} borderColor={theme.colors.brand[400]}>
         <MenuOptionGroup
           defaultValue='sine'
           onChange={(value) => {
             const t = String(value);
-            if (isBasicOscillatorType(t)) { setType(t); }
+            if (isBasicOscillatorType(t)) { setOsc1Type(t); }
           }}
         >
           <MenuItemOption bg={theme.colors.brand[900]} value='sine'>Sine</MenuItemOption>

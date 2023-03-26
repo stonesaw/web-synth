@@ -32,9 +32,7 @@ import { WaveShapeCanvas } from '@/components/synth/osc/waveShapeCanvas';
 import { WaveShapeMenu } from '@/components/synth/osc/waveShapeMenu';
 import { SubOsc } from '@/components/synth/subOsc';
 import { theme } from '@/libs/theme';
-import { clamp, noteNumberToFrequency, percentToFrequency } from '@/libs/utils';
-import { useSynth, SynthProvider } from '@/providers/synth';
-import { BasicOscillatorType, FILTER_FREQ_MAX, FILTER_FREQ_MIN, PropertyMatrix } from '@/types/synth';
+import { useSynth } from '@/providers/synth';
 
 
 interface AutomatableParam {
@@ -77,7 +75,7 @@ const Synth = () => {
     env2Release,
     setEnv2Release,
   } = useSynth();
-  const [ampTabIndex, setAmpTabIndex] = useState(0);
+  const [ampTabIndex, setAmpTabIndex] = useState<number>(0);
 
   return (
     // <SynthProvider>
@@ -250,10 +248,9 @@ const Synth = () => {
 
                   <Matrix setAmpTabIndex={setAmpTabIndex} />
                 </Flex>
-
               {/* </TabPanel>
-              </TabPanels>
-              </Tabs> */}
+            </TabPanels>
+            </Tabs> */}
 
             </HStack>
           </Box>
