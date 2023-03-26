@@ -3,6 +3,7 @@
         "ADSR",
         "Automatable",
         "noselect",
-        "nyquist"
+        "nyquist",
+        "Worklet"
     ]
 }
